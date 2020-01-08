@@ -16,6 +16,9 @@ variables:
     max: 0
     step: 1
     default: 0
+  algorithm: &algorithm
+    type: Flag
+    parameters: [false]
 
 seeds:
   scenario: *seed
@@ -56,8 +59,8 @@ displacements:
       type: CircularArc
       parameters: [*serverCount, 0, 0, 0.5]
     contents:
-      #- molecule: cpuType
-      #  concentration: "server"
+      - molecule: "algorithm"
+        concentration: *algorithm
       - *taskSize
       - *maxTaskPerNode
     programs:
@@ -66,8 +69,8 @@ displacements:
       type: CircularArc
       parameters: [*desktopCount, 0, 0, 1.8]
     contents:
-      #- molecule: cpuType
-      #  concentration: "desktop"
+      - molecule: "algorithm"
+        concentration: *algorithm
       - *taskSize
       - *maxTaskPerNode
     programs:
@@ -77,8 +80,8 @@ displacements:
       type: CircularArc
       parameters: [*socCount, 0, 0, 3]
     contents:
-      #- molecule: cpuType
-      #  concentration: "soc" # "system on chip"
+      - molecule: "algorithm"
+        concentration: *algorithm
       - molecule: meanTaskSize
         concentration: *meanTaskSize
       - *taskSize

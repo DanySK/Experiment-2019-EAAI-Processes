@@ -17,6 +17,10 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
       .map(s => ProvidedService(s)(numInstances = 1)
     )
 
+  var allocatedServices: Set[ProvidedService] = Set.empty
+
+  def availableServices: Set[ProvidedService] = providedServices.filter(_.freeInstances>0)
+
   def task: Option[Task] =
     if(node.has("task"))
       Some(node.get[Task]("task"))
@@ -27,12 +31,43 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     node.put("providedServices", providedServices)
     node.put("hasTask", !task.isEmpty)
 
-    classicServiceDiscovery()
-    processBasedServiceDiscovery()
+    if(node.get[Boolean]("algorithm")){
+      processBasedServiceDiscovery()
+    } else {
+      classicServiceDiscovery()
+    }
+
   }
 
   def classicServiceDiscovery() = {
+    val hasTask = !task.isEmpty
+    val g = classicGradient(hasTask)
 
+    val localTaskRequest = task.map(t => TaskRequest(mid, t)(allocation = Map.empty))
+
+    val receivedRequest = bcast(hasTask, localTaskRequest)
+
+    val offeredService: Option[Service] = receivedRequest.flatMap { request =>
+      request.allocation.find(_._2==mid).map(_._1) // keep current allocation
+        .orElse[Service] {  // or offer an available service
+          request.missingServices.collectFirst { case s if availableServices.find(_.service==s).isDefined => s }
+        }
+    }
+
+    allocatedServices = Set.empty
+    offeredService.foreach { s =>
+      allocatedServices += ProvidedService(s)()
+    }
+
+    val offers = C[Double, Map[ID,Service]](g, _++_, offeredService.map(s => Map(mid->s)).getOrElse(Map.empty), Map.empty)
+    localTaskRequest.map(t => t.copy()(allocation = t.allocation ++ chooseFromOffers(t, offers)) )
+
+  }
+
+  def chooseFromOffers(req: TaskRequest, offers: Map[ID,Service]): Map[Service,ID] = {
+    // TODO
+    // offers.filter()
+    Map.empty
   }
 
   def processBasedServiceDiscovery() = {
@@ -40,6 +75,9 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   }
 
   // Other stuff
+
+  def bcast[V](source: Boolean, field: V): V =
+    G[V](source, field, v => v, nbrRange _)
 
   override def currentPosition(): Point3D = {
     val pos = sense[Euclidean2DPosition](LSNS_POSITION)

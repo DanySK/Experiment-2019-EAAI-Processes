@@ -27,3 +27,12 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
+notifications:
+  email:
+    recipients:
+      - danilo.pianini@unibo.it
+      - roby.casadei@unibo.it
+      - mirko.viroli@unibo.it
+      - giorgio.audrito@unito.it
+      - ferruccio.damiani@unito.it
+    on_success: never

@@ -35,19 +35,14 @@ pools:
           - type: RunScafiProgram
             parameters: [it.unibo.casestudy.ServiceDiscovery, 5.0] # second argument is retention time
       - program: send
-
-#sgcg: &sgcg
- # - time-distribution: 1
- #   program: sgcg:sgcg
- # - program: send
-
-#taskGenerator: &taskGenerator
-#  - time-distribution:
-#      type: ExponentialTime
-#      parameters: [1]
-#    program: >
-#      import Task.newTask
-#      newTask(self.nextRandomDouble() * env.get("meanTaskSize") * self.getDeviceUID().getId(), env.get("maxTasks"))
+  - pool: &taskGenerator
+      - time-distribution:
+          type: ExponentialTime
+          parameters: [0.01, 10] # lambda (mean freq)
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [it.unibo.casestudy.TaskGenerator, 5.0] # second argument is retention time
 
 taskSize: &taskSize
   molecule: meanTaskSize
@@ -77,17 +72,17 @@ displacements:
       - *maxTaskPerNode
     programs:
       - *program
-      #- *taskGenerator
+      - *taskGenerator
   - in:
       type: CircularArc
       parameters: [*socCount, 0, 0, 3]
     contents:
       #- molecule: cpuType
-      #  concentration: "soc"
+      #  concentration: "soc" # "system on chip"
       - molecule: meanTaskSize
         concentration: *meanTaskSize
       - *taskSize
       - *maxTaskPerNode
     programs:
       - *program
-      #- *taskGenerator
+      - *taskGenerator

@@ -16,23 +16,39 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
   import Spawn._
 
+  trait Service
+  case object  Database  extends Service
+  case object OCR extends Service
+  case object  SpeechRecogniser extends Service
+  val services: Set[Service] = Set(Database, OCR, SpeechRecogniser)
+
+  trait IProvidedService {
+    val service: Service
+    val numInstances: Int
+  }
+  case class ProvidedService(service: Service)(val numInstances: Int = 1) extends IProvidedService
+
+  case class Task(requiredServices: Set[Service])
+
+  lazy val providedServices: Set[ProvidedService] =
+    randomGenerator().shuffle(services).take(randomGenerator().nextInt(services.size+1)).map(
+      s => ProvidedService(s)(numInstances = 1)
+    )
+
+  var task: Option[Task] = None
+
   override def main(): Any = {
-    val source = mid % 25 == 0
+    generateTask()
 
-    def process_logic(procId: Int)(stillSource: Boolean): (Double, Boolean) = {
-      val g = classicGradient(mid==procId && stillSource)
-      (g, g < 2000 && (mid!=procId || stillSource))
-    }
+    node.put("providedServices", providedServices)
+    node.put("hasTask", !task.isEmpty)
+    node.put("task", task)
 
-    val procs = spawn[Int,Boolean,Double]((process_logic _), if(source) Set(mid) else Set.empty, source)
-      .toList.sortBy(_._2)
+  }
 
-    def procName(i: Int) = s"proc${i}"
-    val thisNode = alchemistEnvironment.getNodeByID(mid)
-    import scala.collection.JavaConverters._
-    thisNode.getContents.asScala.foreach( tp => if(tp._1.getName.startsWith("proc")) thisNode.removeConcentration(tp._1) )
-    procs.foreach {
-      case (pid,value) => node.put(procName(pid), 1)
+  private def generateTask(): Unit = if(task.isEmpty) {
+    if(randomGenerator().nextGaussian()>1){
+      task = Some(Task((randomGenerator().shuffle(services)-providedServices).take(1+randomGenerator().nextInt(3))))
     }
   }
 }

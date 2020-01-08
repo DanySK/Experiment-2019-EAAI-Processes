@@ -1,4 +1,4 @@
-incarnation: protelis
+incarnation: scafi
 
 variables:
   meanTaskSize: &meanTaskSize
@@ -25,18 +25,29 @@ network-model:
   type: ConnectWithinDistance
   parameters: [1.5]
 
-sgcg: &sgcg
-  - time-distribution: 1
-    program: sgcg:sgcg
-  - program: send
+pools:
+  - pool: &program
+      - time-distribution:
+          type: ExponentialTime
+          parameters: [1]
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [it.unibo.casestudy.ServiceDiscovery, 5.0] # second argument is retention time
+      - program: send
 
-taskGenerator: &taskGenerator
-  - time-distribution:
-      type: ExponentialTime
-      parameters: [1]
-    program: >
-      import Task.newTask
-      newTask(self.nextRandomDouble() * env.get("meanTaskSize") * self.getDeviceUID().getId(), env.get("maxTasks"))
+#sgcg: &sgcg
+ # - time-distribution: 1
+ #   program: sgcg:sgcg
+ # - program: send
+
+#taskGenerator: &taskGenerator
+#  - time-distribution:
+#      type: ExponentialTime
+#      parameters: [1]
+#    program: >
+#      import Task.newTask
+#      newTask(self.nextRandomDouble() * env.get("meanTaskSize") * self.getDeviceUID().getId(), env.get("maxTasks"))
 
 taskSize: &taskSize
   molecule: meanTaskSize
@@ -50,33 +61,33 @@ displacements:
       type: CircularArc
       parameters: [*serverCount, 0, 0, 0.5]
     contents:
-      - molecule: cpuType
-        concentration: "server"
+      #- molecule: cpuType
+      #  concentration: "server"
       - *taskSize
       - *maxTaskPerNode
     programs:
-      - *sgcg
+      - *program
   - in:
       type: CircularArc
       parameters: [*desktopCount, 0, 0, 1.8]
     contents:
-      - molecule: cpuType
-        concentration: "desktop"
+      #- molecule: cpuType
+      #  concentration: "desktop"
       - *taskSize
       - *maxTaskPerNode
     programs:
-      - *sgcg
-      - *taskGenerator
+      - *program
+      #- *taskGenerator
   - in:
       type: CircularArc
       parameters: [*socCount, 0, 0, 3]
     contents:
-      - molecule: cpuType
-        concentration: "soc"
+      #- molecule: cpuType
+      #  concentration: "soc"
       - molecule: meanTaskSize
         concentration: *meanTaskSize
       - *taskSize
       - *maxTaskPerNode
     programs:
-      - *sgcg
-      - *taskGenerator
+      - *program
+      #- *taskGenerator

@@ -41,7 +41,7 @@ pools:
   - pool: &taskGenerator
       - time-distribution:
           type: ExponentialTime
-          parameters: [0.01, 10] # lambda (mean freq)
+          parameters: [0.001p, 1] # lambda (mean freq)
         type: Event
         actions:
           - type: RunScafiProgram

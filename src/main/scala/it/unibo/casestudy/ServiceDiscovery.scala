@@ -42,7 +42,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   }
 
   def classicServiceDiscovery() = {
-    val hasTask = !task.isEmpty
+    val hasTask = task.isDefined
     val g = classicGradient(hasTask)
     node.put("gradient", f"$g%2.1f")
 

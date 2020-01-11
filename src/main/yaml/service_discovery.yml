@@ -25,6 +25,9 @@ variables:
 
 export:
   - time
+  - molecule: taskHops
+    aggregators: [mean]
+    value-filter: FilterNaN
   - molecule: tasks
     aggregators: [sum]
     value-filter: FilterNaN
@@ -35,9 +38,6 @@ export:
     aggregators: [sum]
     value-filter: FilterNaN
   - molecule: taskLatency
-    aggregators: [sum]
-    value-filter: FilterNaN
-  - molecule: taskHops
     aggregators: [sum]
     value-filter: FilterNaN
 

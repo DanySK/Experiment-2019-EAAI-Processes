@@ -99,7 +99,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
       val numHops: Int = taskRequest.get.allocation.values.map(hops(_)).sum
       val cloudHops: Int = taskRequest.get.missingServices.map(_ => node.get[Int]("cloudcost")).sum
       val totalHops = numHops + cloudHops
-      node.put("taskHops", if(node.has("taskHops")) node.get[Int]("taskHops") + totalHops else totalHops)
+      node.put("taskHops", if(node.has("taskHops")) node.get[Number]("taskHops").intValue() + totalHops else totalHops)
       if(accomplished) {
         node.put("completedTasks", if(node.has("completedTasks")) node.get[Int]("completedTasks")+1 else 1)
       }

@@ -132,7 +132,7 @@ fun makeTest(
         args(
                 "-y", "src/main/yaml/${file}.yml",
                 "-t", "$time",
-                "-e", "data/${today}-${name}",
+                "-e", "data/${name}",
                 "-p", threadCount,
                 "-i", "$sampling"
         )
@@ -140,11 +140,11 @@ fun makeTest(
             args("-b", "-var", *vars.toTypedArray())
         }
     }
-    /*tasks {
-        "runTests" {
+    tasks {
+        "runAll" {
             dependsOn("$name")
         }
-    }*/
+    }
 }
 
-makeTest(name="sim", file = "service_discovery", time = 100.0, vars = setOf("random"), taskSize = 2800)
+makeTest(name="sim", file = "service_discovery", time = 100.0, vars = setOf("seed"), taskSize = 2800)

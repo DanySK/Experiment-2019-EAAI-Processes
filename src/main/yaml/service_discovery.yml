@@ -13,12 +13,14 @@ variables:
     formula: 50
   seed: &seed
     min: 0
-    max: 0
+    max: 10
     step: 1
     default: 0
   algorithm: &algorithm
     type: Flag
     parameters: [false]
+
+
 
 seeds:
   scenario: *seed

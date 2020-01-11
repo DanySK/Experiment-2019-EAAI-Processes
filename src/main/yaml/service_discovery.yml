@@ -9,8 +9,6 @@ variables:
     formula: 25
   socCount: &socCount
     formula: 100
-  maxTasks: &maxTasks
-    formula: 50
   seed: &seed
     min: 0
     max: 10

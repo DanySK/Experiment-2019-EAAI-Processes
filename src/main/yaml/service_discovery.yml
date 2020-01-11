@@ -14,11 +14,16 @@ variables:
     formula: 25
   socCount: &socCount
     formula: 100
-  maxTasks: &maxTasks
-    formula: 50
+  seed: &seed
+    min: 0
+    max: 10
+    step: 1
+    default: 0
   algorithm: &algorithm
     type: Flag
     parameters: [false]
+  maxTasks: &maxTasks
+    formula: 50
 
 export:
   - time
@@ -61,14 +66,6 @@ pools:
         actions:
           - type: RunScafiProgram
             parameters: [it.unibo.casestudy.TaskGenerator, 5.0] # second argument is retention time
-
-taskSize: &taskSize
-  molecule: meanTaskSize
-  concentration: *meanTaskSize
-maxTaskPerNode: &maxTaskPerNode
-  molecule: maxTasks
-  concentration: *maxTasks
-
 displacements:
   - in:
       type: CircularArc

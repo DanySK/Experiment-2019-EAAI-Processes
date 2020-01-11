@@ -29,7 +29,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
   override def main(): Any = {
     node.put("providedServices", providedServices)
-    node.put("hasTask", !task.isEmpty)
+    node.put("hasTask", task.isDefined)
     node.put("t_time", currentTime())
     node.put("t_timestamp", timestamp())
 
@@ -42,7 +42,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   }
 
   def classicServiceDiscovery() = {
-    val hasTask = !task.isEmpty
+    val hasTask = task.isDefined
     val g = classicGradient(hasTask)
     node.put("gradient", f"$g%2.1f")
 
@@ -55,13 +55,13 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
         val receivedRequest = bcast(hasTask, localTaskRequest)
         node.put("receivedRequest", receivedRequest.isDefined)
         node.put("request", receivedRequest)
-        if(!receivedRequest.isDefined && node.has("requestBy")) node.remove("requestBy")
+        if(receivedRequest.isEmpty && node.has("requestBy")) node.remove("requestBy")
         else if(receivedRequest.isDefined) node.put("requestBy", receivedRequest.get.requestor%20)
 
         val offeredService: Option[Service] = receivedRequest.flatMap { request =>
           request.allocation.find(_._2 == mid).map(_._1) // keep current allocation
             .orElse[Service] { // or offer an available service
-              request.missingServices.collectFirst { case s if availableServices.find(_.service == s).isDefined => s }
+              request.missingServices.collectFirst { case s if availableServices.exists(_.service == s) => s }
             }
         }
         node.put("offersService", offeredService.isDefined)
@@ -77,7 +77,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     }
 
     // Time a device is trying to satisfy a task
-    val tryFor: Long = branch(!taskChanged && taskRequest.map(!_.missingServices.isEmpty).getOrElse(false) ){
+    val tryFor: Long = branch(!taskChanged && taskRequest.exists(_.missingServices.nonEmpty) ){
       val start = rep(timestamp())(x => x)
       timestamp() - start
     }{ 0 }

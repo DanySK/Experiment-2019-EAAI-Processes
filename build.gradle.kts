@@ -109,8 +109,4 @@ fun makeTest(
     }
 }
 
-<<<<<<< HEAD
 makeTest(name="sim", file = "service_discovery", time = 1000.0, vars = setOf("seed"), taskSize = 256)
-=======
-makeTest(name="sim", file = "service_discovery", time = 500.0, vars = setOf("seed"), taskSize = 2800)
->>>>>>> 6ea4251f1079a4b0f608a9d3d88e81fb5fc4aa68

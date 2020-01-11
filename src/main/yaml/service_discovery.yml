@@ -6,6 +6,9 @@ variables:
     max: 2
     step: 1
     default: 0
+  cloudcost: &cloudcost
+    type: ArbitraryVariable
+    parameters: [15, [0, 1, 5, 10, 15, 20, 30, 50]]
   serverCount: &serverCount
     formula: 10
   desktopCount: &desktopCount
@@ -100,6 +103,8 @@ displacements:
     contents:
       - molecule: "algorithm"
         concentration: *algorithm
+      - molecule: cloudcost
+        concentration: *cloudcost
       - molecule: tasks
         concentration: 0
       - molecule: completedTasks

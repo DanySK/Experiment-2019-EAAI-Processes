@@ -17,9 +17,6 @@ variables:
   algorithm: &algorithm
     type: Flag
     parameters: [false]
-  maxTasks: &maxTasks
-    formula: 50
-
 
 export:
   - time

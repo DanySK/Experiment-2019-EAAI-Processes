@@ -61,7 +61,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
         val offeredService: Option[Service] = receivedRequest.flatMap { request =>
           request.allocation.find(_._2 == mid).map(_._1) // keep current allocation
             .orElse[Service] { // or offer an available service
-              request.missingServices.collectFirst { case s if availableServices.find(_.service == s).isDefined => s }
+              request.missingServices.collectFirst { case s if availableServices.exists(_.service == s) => s }
             }
         }
         node.put("offersService", offeredService.isDefined)

@@ -1,6 +1,11 @@
 incarnation: scafi
 
 variables:
+  seed: &seed
+    min: 0
+    max: 2
+    step: 1
+    default: 0
   meanTaskSize: &meanTaskSize
     formula: 1000
   serverCount: &serverCount
@@ -11,14 +16,24 @@ variables:
     formula: 100
   maxTasks: &maxTasks
     formula: 50
-  seed: &seed
-    min: 0
-    max: 0
-    step: 1
-    default: 0
   algorithm: &algorithm
     type: Flag
     parameters: [false]
+
+export:
+  - time
+  - molecule: tasks
+    aggregators: [sum]
+    value-filter: FilterNaN
+  - molecule: completedTasks
+    aggregators: [sum]
+    value-filter: FilterNaN
+  - molecule: giveupTasks
+    aggregators: [sum]
+    value-filter: FilterNaN
+  - molecule: taskLatency
+    aggregators: [sum]
+    value-filter: FilterNaN
 
 seeds:
   scenario: *seed
@@ -63,6 +78,14 @@ displacements:
         concentration: *algorithm
       - *taskSize
       - *maxTaskPerNode
+      - molecule: tasks
+        concentration: 0
+      - molecule: completedTasks
+        concentration: 0
+      - molecule: giveupTasks
+        concentration: 0
+      - molecule: taskLatency
+        concentration: 0
     programs:
       - *program
   - in:
@@ -73,6 +96,14 @@ displacements:
         concentration: *algorithm
       - *taskSize
       - *maxTaskPerNode
+      - molecule: tasks
+        concentration: 0
+      - molecule: completedTasks
+        concentration: 0
+      - molecule: giveupTasks
+        concentration: 0
+      - molecule: taskLatency
+        concentration: 0
     programs:
       - *program
       - *taskGenerator
@@ -86,6 +117,14 @@ displacements:
         concentration: *meanTaskSize
       - *taskSize
       - *maxTaskPerNode
+      - molecule: tasks
+        concentration: 0
+      - molecule: completedTasks
+        concentration: 0
+      - molecule: giveupTasks
+        concentration: 0
+      - molecule: taskLatency
+        concentration: 0
     programs:
       - *program
       - *taskGenerator

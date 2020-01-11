@@ -113,12 +113,9 @@ fun makeTest(
         // Guess 10GB RAM of which 2 used by the OS
         10 * 1024L
     }
-
     val threadCount = threads ?: maxOf(1, minOf(Runtime.getRuntime().availableProcessors(), heap.toInt() / taskSize ))
     println("Running on $threadCount threads")
-
-    val today = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-
+    val today = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     task<JavaExec>("$name") {
         classpath = sourceSets["main"].runtimeClasspath
         classpath("src/main/protelis")
@@ -126,7 +123,8 @@ fun makeTest(
         maxHeapSize = "${heap}m"
         jvmArgs("-XX:+AggressiveHeap")
         jvmArgs("-XX:-UseGCOverheadLimit")
-        //jvmArgs("-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap") // https://stackoverflow.com/questions/38967991/why-are-my-gradle-builds-dying-with-exit-code-137
+        // https://stackoverflow.com/questions/38967991/why-are-my-gradle-builds-dying-with-exit-code-137
+        //jvmArgs("-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap")
         if (debug) {
             jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1044")
         }

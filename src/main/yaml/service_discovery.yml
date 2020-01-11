@@ -9,6 +9,10 @@ variables:
   cloudcost: &cloudcost
     type: ArbitraryVariable
     parameters: [15, [0, 1, 5, 10, 15, 20, 30, 50]]
+  taskPropagationTime: &taskPropagationTime
+    formula: 10
+  taskConclusionTime: &taskConclusionTime
+    formula: 100
   serverCount: &serverCount
     formula: 10
   desktopCount: &desktopCount
@@ -78,6 +82,10 @@ displacements:
         concentration: 0
       - molecule: taskLatency
         concentration: 0
+      - molecule: taskPropagationTime
+        concentration: *taskPropagationTime
+      - molecule: taskConclusionTime
+        concentration: *taskConclusionTime
     programs:
       - *program
   - in:
@@ -94,6 +102,10 @@ displacements:
         concentration: 0
       - molecule: taskLatency
         concentration: 0
+      - molecule: taskPropagationTime
+        concentration: *taskPropagationTime
+      - molecule: taskConclusionTime
+        concentration: *taskConclusionTime
     programs:
       - *program
       - *taskGenerator
@@ -113,6 +125,10 @@ displacements:
         concentration: 0
       - molecule: taskLatency
         concentration: 0
+      - molecule: taskPropagationTime
+        concentration: *taskPropagationTime
+      - molecule: taskConclusionTime
+        concentration: *taskConclusionTime
     programs:
       - *program
       - *taskGenerator

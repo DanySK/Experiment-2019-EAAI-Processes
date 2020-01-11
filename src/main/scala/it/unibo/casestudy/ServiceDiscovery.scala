@@ -29,7 +29,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
   override def main(): Any = {
     node.put("providedServices", providedServices)
-    node.put("hasTask", !task.isEmpty)
+    node.put("hasTask", task.isDefined)
     node.put("t_time", currentTime())
     node.put("t_timestamp", timestamp())
 

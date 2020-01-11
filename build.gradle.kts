@@ -141,5 +141,5 @@ fun makeTest(
     }
 }
 
-makeTest(name="sim", file = "service_discovery", time = 1000.0, vars = setOf("seed"), taskSize = 256)
+makeTest(name="sim", file = "service_discovery", time = 1000.0, vars = setOf("seed", "cloudcost", "taskFrequency"), taskSize = 256)
 

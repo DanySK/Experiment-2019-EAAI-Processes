@@ -30,6 +30,8 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   override def main(): Any = {
     node.put("providedServices", providedServices)
     node.put("hasTask", !task.isEmpty)
+    node.put("t_time", currentTime())
+    node.put("t_timestamp", timestamp())
 
     if(node.get[Boolean]("algorithm")){
       processBasedServiceDiscovery()
@@ -42,13 +44,19 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   def classicServiceDiscovery() = {
     val hasTask = !task.isEmpty
     val g = classicGradient(hasTask)
-    node.put("gradient", g)
+    node.put("gradient", f"$g%2.1f")
+
+    var taskChanged = false
 
     val taskRequest = rep[Option[TaskRequest]](None) { tr =>
-        val localTaskRequest = tr.orElse(task.map(t => TaskRequest(mid, t)(allocation = Map.empty)))
+        val theTask = task.map(t => TaskRequest(mid, t)(allocation = Map.empty))
+        taskChanged = theTask != tr
+        val localTaskRequest = if(tr==theTask) tr else theTask
         val receivedRequest = bcast(hasTask, localTaskRequest)
         node.put("receivedRequest", receivedRequest.isDefined)
         node.put("request", receivedRequest)
+        if(!receivedRequest.isDefined && node.has("requestBy")) node.remove("requestBy")
+        else if(receivedRequest.isDefined) node.put("requestBy", receivedRequest.get.requestor%20)
 
         val offeredService: Option[Service] = receivedRequest.flatMap { request =>
           request.allocation.find(_._2 == mid).map(_._1) // keep current allocation
@@ -68,12 +76,27 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
         localTaskRequest.map(t => t.copy()(allocation = chooseFromOffers(t, offers)))
     }
 
+    // Time a device is trying to satisfy a task
+    val tryFor: Long = branch(!taskChanged && taskRequest.map(!_.missingServices.isEmpty).getOrElse(false) ){
+      val start = rep(timestamp())(x => x)
+      timestamp() - start
+    }{ 0 }
+    // Time a device has a task satisfied
     val keepFor: Long = branch(taskRequest.isDefined && taskRequest.get.missingServices.isEmpty){
       val start = rep(timestamp())(x => x)
       timestamp() - start
     }{ 0 }
-    if(keepFor > 10 && node.has("task")){
+    // Condition for task removal (accomplishment)
+    val accomplished = keepFor > 10
+    val giveUp = tryFor > 100
+    if((accomplished || giveUp) && node.has("task")){
       node.remove("task")
+      val latency = timestamp()-node.get[Long]("taskTime")
+      node.put("taskLatency", if(node.has("taskLatency")) node.get[Long]("taskLatency")+latency else latency)
+      if(accomplished)
+        node.put("completedTasks", if(node.has("completedTasks")) node.get[Int]("completedTasks")+1 else 1)
+      if(giveUp)
+        node.put("giveupTasks", if(node.has("giveupTasks")) node.get[Int]("giveupTasks")+1 else 1)
     }
   }
 

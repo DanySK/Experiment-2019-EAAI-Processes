@@ -55,6 +55,38 @@ tasks.withType<ScalaCompile> {
     targetCompatibility = "1.8"
 }
 
+val alchemistGroup = "Run Alchemist"
+/*
+ * This task is used to run all experiments in sequence
+ */
+val runAll by tasks.register<DefaultTask>("runAll") {
+    group = alchemistGroup
+    description = "Launches all simulations"
+}
+/*
+ * Scan the folder with the simulation files, and create a task for each one of them.
+ */
+File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
+        .filter { it.extension == "yml" }
+        .sortedBy { it.nameWithoutExtension }
+        .forEach {
+            val task by tasks.register<JavaExec>("run${it.nameWithoutExtension.capitalize()}") {
+                group = alchemistGroup
+                description = "Launches simulation ${it.nameWithoutExtension}"
+                main = "it.unibo.alchemist.Alchemist"
+                classpath = sourceSets["main"].runtimeClasspath
+                args(
+                        "-y", it.absolutePath,
+                        "-g", "effects/${it.nameWithoutExtension}.aes"
+                )
+                if (System.getenv("CI") == "true") {
+                    args("-hl", "-t", "10")
+                }
+            }
+            // task.dependsOn(classpathJar) // Uncomment to switch to jar-based cp resolution
+            runAll.dependsOn(task)
+        }
+
 fun makeTest(
         file: String,
         name: String = file,
@@ -110,3 +142,4 @@ fun makeTest(
 }
 
 makeTest(name="sim", file = "service_discovery", time = 1000.0, vars = setOf("seed"), taskSize = 256)
+

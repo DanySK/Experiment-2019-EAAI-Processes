@@ -6,8 +6,6 @@ variables:
     max: 2
     step: 1
     default: 0
-  meanTaskSize: &meanTaskSize
-    formula: 1000
   serverCount: &serverCount
     formula: 10
   desktopCount: &desktopCount
@@ -102,8 +100,6 @@ displacements:
     contents:
       - molecule: "algorithm"
         concentration: *algorithm
-      - molecule: meanTaskSize
-        concentration: *meanTaskSize
       - molecule: tasks
         concentration: 0
       - molecule: completedTasks

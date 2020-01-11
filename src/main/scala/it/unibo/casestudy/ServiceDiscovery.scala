@@ -44,9 +44,11 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   def classicServiceDiscovery() = {
     val hasTask = task.isDefined
     val g = classicGradient(hasTask)
+    val gHops = G[Int](hasTask, 0, _+1, nbrRange _)
     node.put("gradient", f"$g%2.1f")
 
     var taskChanged = false
+    var hops: Map[ID,Int] = Map.empty
 
     val taskRequest = rep[Option[TaskRequest]](None) { tr =>
         val theTask = task.map(t => TaskRequest(mid, t)(allocation = Map.empty))
@@ -73,6 +75,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
         }
 
         val offers = C[Double, Map[ID, Service]](g, _ ++ _, offeredService.map(s => Map(mid -> s)).getOrElse(Map.empty), Map.empty)
+        hops = C[Double,Map[ID,Int]](g, _++_, offeredService.map(s => Map(mid -> gHops)).getOrElse(Map.empty), Map.empty)
         localTaskRequest.map(t => t.copy()(allocation = chooseFromOffers(t, offers)))
     }
 
@@ -93,6 +96,8 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
       node.remove("task")
       val latency: Int = (timestamp()-node.get[Long]("taskTime")).toInt
       node.put("taskLatency", if(node.has("taskLatency")) node.get[Int]("taskLatency")+latency else latency)
+      val numHops: Int = taskRequest.get.allocation.mapValues(hops(_)).fold[Int](0)(_+_)
+      node.put("taskHops", if(node.has("taskHops")) node.get[Int]("taskHops")+numHops else numHops)
       if(accomplished)
         node.put("completedTasks", if(node.has("completedTasks")) node.get[Int]("completedTasks")+1 else 1)
       if(giveUp)

@@ -39,6 +39,9 @@ export:
   - molecule: taskLatency
     aggregators: [sum]
     value-filter: FilterNaN
+  - molecule: taskHops
+    aggregators: [sum]
+    value-filter: FilterNaN
 
 seeds:
   scenario: *seed

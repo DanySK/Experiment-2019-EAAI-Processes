@@ -91,8 +91,8 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     val giveUp = tryFor > 100
     if((accomplished || giveUp) && node.has("task")){
       node.remove("task")
-      val latency = timestamp()-node.get[Long]("taskTime")
-      node.put("taskLatency", if(node.has("taskLatency")) node.get[Long]("taskLatency")+latency else latency)
+      val latency: Int = (timestamp()-node.get[Long]("taskTime")).toInt
+      node.put("taskLatency", if(node.has("taskLatency")) node.get[Int]("taskLatency")+latency else latency)
       if(accomplished) {
         node.put("completedTasks", if(node.has("completedTasks")) node.get[Int]("completedTasks")+1 else 1)
       }

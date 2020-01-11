@@ -42,6 +42,7 @@ dependencies {
     implementation("it.unibo.apice.scafiteam:scafi-core_2.12:0.3.2")
     implementation("com.uchuhimo:konf-core:+")
     implementation("com.uchuhimo:konf-yaml:+")
+
 }
 tasks.withType<KotlinCompile> {
     kotlinOptions {
@@ -53,39 +54,6 @@ tasks.withType<ScalaCompile> {
     sourceCompatibility = "1.8"
     targetCompatibility = "1.8"
 }
-
-val alchemistGroup = "Run Alchemist"
-/*
- * This task is used to run all experiments in sequence
- */
-val runAll by tasks.register<DefaultTask>("runAll") {
-    group = alchemistGroup
-    description = "Launches all simulations"
-}
-/*
- * Scan the folder with the simulation files, and create a task for each one of them.
- */
-File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
-    .filter { it.extension == "yml" }
-    .sortedBy { it.nameWithoutExtension }
-    .forEach {
-        val task by tasks.register<JavaExec>("run${it.nameWithoutExtension.capitalize()}") {
-            group = alchemistGroup
-            description = "Launches simulation ${it.nameWithoutExtension}"
-            main = "it.unibo.alchemist.Alchemist"
-            classpath = sourceSets["main"].runtimeClasspath
-            args(
-                "-y", it.absolutePath,
-                "-g", "effects/${it.nameWithoutExtension}.aes"
-            )
-            if (System.getenv("CI") == "true") {
-                args("-hl", "-t", "10")
-            }
-        }
-        // task.dependsOn(classpathJar) // Uncomment to switch to jar-based cp resolution
-        runAll.dependsOn(task)
-    }
-
 
 fun makeTest(
         file: String,
@@ -117,7 +85,7 @@ fun makeTest(
     println("Running on $threadCount threads")
     task<JavaExec>("$name") {
         classpath = sourceSets["main"].runtimeClasspath
-        classpath("src/main/protelis")
+        classpath("src/main/scala")
         main = "it.unibo.alchemist.Alchemist"
         maxHeapSize = "${heap}m"
         jvmArgs("-XX:+AggressiveHeap")
@@ -141,4 +109,8 @@ fun makeTest(
     }
 }
 
+<<<<<<< HEAD
 makeTest(name="sim", file = "service_discovery", time = 1000.0, vars = setOf("seed"), taskSize = 256)
+=======
+makeTest(name="sim", file = "service_discovery", time = 500.0, vars = setOf("seed"), taskSize = 2800)
+>>>>>>> 6ea4251f1079a4b0f608a9d3d88e81fb5fc4aa68

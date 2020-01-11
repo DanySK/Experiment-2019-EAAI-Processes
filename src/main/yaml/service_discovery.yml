@@ -6,24 +6,15 @@ variables:
     max: 2
     step: 1
     default: 0
-  meanTaskSize: &meanTaskSize
-    formula: 1000
   serverCount: &serverCount
     formula: 10
   desktopCount: &desktopCount
     formula: 25
   socCount: &socCount
     formula: 100
-  seed: &seed
-    min: 0
-    max: 10
-    step: 1
-    default: 0
   algorithm: &algorithm
     type: Flag
     parameters: [false]
-  maxTasks: &maxTasks
-    formula: 50
 
 export:
   - time
@@ -109,8 +100,6 @@ displacements:
     contents:
       - molecule: "algorithm"
         concentration: *algorithm
-      - molecule: meanTaskSize
-        concentration: *meanTaskSize
       - molecule: tasks
         concentration: 0
       - molecule: completedTasks

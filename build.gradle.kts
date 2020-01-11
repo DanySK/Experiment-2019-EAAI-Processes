@@ -115,7 +115,6 @@ fun makeTest(
     }
     val threadCount = threads ?: maxOf(1, minOf(Runtime.getRuntime().availableProcessors(), heap.toInt() / taskSize ))
     println("Running on $threadCount threads")
-    val today = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     task<JavaExec>("$name") {
         classpath = sourceSets["main"].runtimeClasspath
         classpath("src/main/protelis")
@@ -138,11 +137,6 @@ fun makeTest(
         )
         if (vars.isNotEmpty()) {
             args("-b", "-var", *vars.toTypedArray())
-        }
-    }
-    tasks {
-        "runAll" {
-            dependsOn("$name")
         }
     }
 }

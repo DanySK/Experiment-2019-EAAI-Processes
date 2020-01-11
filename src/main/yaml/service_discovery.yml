@@ -48,14 +48,6 @@ pools:
         actions:
           - type: RunScafiProgram
             parameters: [it.unibo.casestudy.TaskGenerator, 5.0] # second argument is retention time
-
-taskSize: &taskSize
-  molecule: meanTaskSize
-  concentration: *meanTaskSize
-maxTaskPerNode: &maxTaskPerNode
-  molecule: maxTasks
-  concentration: *maxTasks
-
 displacements:
   - in:
       type: CircularArc
@@ -63,8 +55,6 @@ displacements:
     contents:
       - molecule: "algorithm"
         concentration: *algorithm
-      - *taskSize
-      - *maxTaskPerNode
     programs:
       - *program
   - in:
@@ -73,8 +63,6 @@ displacements:
     contents:
       - molecule: "algorithm"
         concentration: *algorithm
-      - *taskSize
-      - *maxTaskPerNode
     programs:
       - *program
       - *taskGenerator
@@ -86,8 +74,6 @@ displacements:
         concentration: *algorithm
       - molecule: meanTaskSize
         concentration: *meanTaskSize
-      - *taskSize
-      - *maxTaskPerNode
     programs:
       - *program
       - *taskGenerator

@@ -55,7 +55,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
         val receivedRequest = bcast(hasTask, localTaskRequest)
         node.put("receivedRequest", receivedRequest.isDefined)
         node.put("request", receivedRequest)
-        if(!receivedRequest.isDefined && node.has("requestBy")) node.remove("requestBy")
+        if(receivedRequest.isEmpty && node.has("requestBy")) node.remove("requestBy")
         else if(receivedRequest.isDefined) node.put("requestBy", receivedRequest.get.requestor%20)
 
         val offeredService: Option[Service] = receivedRequest.flatMap { request =>

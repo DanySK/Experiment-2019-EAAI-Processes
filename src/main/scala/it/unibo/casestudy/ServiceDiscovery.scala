@@ -96,9 +96,11 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
       node.remove("task")
       val latency: Int = (timestamp()-node.get[Long]("taskTime")).toInt
       node.put("taskLatency", if(node.has("taskLatency")) node.get[Int]("taskLatency")+latency else latency)
+      val numHops: Int = taskRequest.get.allocation.values.map(hops(_)).sum
+      val cloudHops: Int = taskRequest.get.missingServices.map(_ => node.get[Int]("cloudcost")).sum
+      val totalHops = numHops + cloudHops
+      node.put("taskHops", if(node.has("taskHops")) node.get[Int]("taskHops")+totalHops else totalHops)
       if(accomplished) {
-        val numHops: Int = taskRequest.get.allocation.values.map(hops(_)).sum
-        node.put("taskHops", if(node.has("taskHops")) node.get[Int]("taskHops")+numHops else numHops)
         node.put("completedTasks", if(node.has("completedTasks")) node.get[Int]("completedTasks")+1 else 1)
       }
       if(giveUp) {

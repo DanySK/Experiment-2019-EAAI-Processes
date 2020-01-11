@@ -109,4 +109,4 @@ fun makeTest(
     }
 }
 
-makeTest(name="sim", file = "service_discovery", time = 500.0, vars = setOf("seed"), taskSize = 2800)
+makeTest(name="sim", file = "service_discovery", time = 1000.0, vars = setOf("seed"), taskSize = 256)

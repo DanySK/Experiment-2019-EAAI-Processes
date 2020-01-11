@@ -77,7 +77,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     }
 
     // Time a device is trying to satisfy a task
-    val tryFor: Long = branch(!taskChanged && taskRequest.exists(!_.missingServices.isEmpty) ){
+    val tryFor: Long = branch(!taskChanged && taskRequest.exists(_.missingServices.nonEmpty) ){
       val start = rep(timestamp())(x => x)
       timestamp() - start
     }{ 0 }

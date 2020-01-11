@@ -3,7 +3,7 @@ incarnation: scafi
 variables:
   seed: &seed
     min: 0
-    max: 2
+    max: 9
     step: 1
     default: 0
   cloudcost: &cloudcost

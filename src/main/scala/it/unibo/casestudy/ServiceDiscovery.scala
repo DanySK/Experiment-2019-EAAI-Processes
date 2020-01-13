@@ -107,11 +107,13 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
             newOfferedService.isDefined
           })
           // Make again available an offered service if the requestor has chosen the service from another device
-          for(alloc <- request.allocation if alloc._2!=mid)
+          for(alloc <- request.allocation if alloc._2!=mid) {
               removeOfferedService(alloc._1)
+          }
           // Make again available an offered service if the requestor has changed
-          for(os <- offeredServices if os._2.requestor != request.requestor)
+          for(os <- offeredServices if os._2.requestor != request.requestor) {
             removeOfferedService(os._1.service)
+          }
           currentlyOffered ++ newOffers
         }.getOrElse(Set.empty)
         node.put("offersService", !offeredServs.isEmpty)

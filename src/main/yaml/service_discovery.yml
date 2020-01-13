@@ -24,7 +24,7 @@ variables:
     formula: 100
   algorithm: &algorithm
     type: ArbitraryVariable
-    parameters: [false, [false]]
+    parameters: [false, [false, true]]
 
 export:
   - time

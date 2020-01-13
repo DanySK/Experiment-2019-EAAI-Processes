@@ -228,7 +228,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
       // Collect hops (distance) from providers to the requestor
       hops = C[Double,Map[ID,Int]](gHops, _++_, servicesToOffer.map(s => mid -> gHops).toMap, Map.empty)
       // Collect the bubble diameter to the requestor
-      val maxExt = C[Double,Int](gHops, Math.max(_,_), gHops, -1)
+      val maxExt = C[Double,Int](gHops, Math.max, gHops, -1)
       // Update allocation based on service offers
       val newTaskRequest = receivedRequest.taskRequest.copy()(allocation = chooseFromOffers(receivedRequest.taskRequest, offers))
 

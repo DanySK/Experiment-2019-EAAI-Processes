@@ -82,6 +82,8 @@ displacements:
         concentration: *algorithm
       - molecule: cloudcost
         concentration: *cloudcost
+      - molecule: hasTask
+        concentration: false
       - molecule: tasks
         concentration: 0
       - molecule: taskHops
@@ -106,6 +108,8 @@ displacements:
         concentration: *algorithm
       - molecule: cloudcost
         concentration: *cloudcost
+      - molecule: hasTask
+        concentration: false
       - molecule: taskHops
         concentration: Double.NaN
       - molecule: tasks
@@ -131,6 +135,8 @@ displacements:
         concentration: *algorithm
       - molecule: cloudcost
         concentration: *cloudcost
+      - molecule: hasTask
+        concentration: false
       - molecule: taskHops
         concentration: Double.NaN
       - molecule: tasks

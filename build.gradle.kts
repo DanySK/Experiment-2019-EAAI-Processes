@@ -96,7 +96,8 @@ fun makeTest(
         maxHeap: Long? = null,
         taskSize: Int = 1024,
         threads: Int? = null,
-        debug: Boolean = false
+        debug: Boolean = false,
+        effectFile: String = "none.aes"
 ) {
     val heap: Long = maxHeap ?: if (System.getProperty("os.name").toLowerCase().contains("linux")) {
         ByteArrayOutputStream()
@@ -133,7 +134,8 @@ fun makeTest(
                 "-t", "$time",
                 "-e", "data/${name}",
                 "-p", threadCount,
-                "-i", "$sampling"
+                "-i", "$sampling",
+                "-g", "$effectFile"
         )
         if (vars.isNotEmpty()) {
             args("-b", "-var", *vars.toTypedArray())
@@ -142,4 +144,7 @@ fun makeTest(
 }
 
 makeTest(name="sim", file = "service_discovery", sampling = 10.0, time = 3600.0, vars = setOf("seed", "cloudcost", "taskFrequency", "algorithm"), taskSize = 256)
+
+makeTest(name="graphicalSim", file = "service_discovery", sampling = 10.0, time = 3600.0, vars = setOf(), taskSize = 2024,
+        effectFile = "effects/service_discovery.aes")
 

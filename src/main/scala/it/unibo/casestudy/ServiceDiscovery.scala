@@ -116,7 +116,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
           }
           currentlyOffered ++ newOffers
         }.getOrElse(Set.empty)
-        node.put("offersService", !offeredServs.isEmpty)
+        node.put("offersService", offeredServs.nonEmpty)
         node.put("offeredService", offeredServs)
 
         // Collect offers to requestor

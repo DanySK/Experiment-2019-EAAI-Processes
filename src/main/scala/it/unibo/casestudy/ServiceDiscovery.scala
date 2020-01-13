@@ -22,7 +22,8 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
   var allocatedServices: Set[ProvidedService] = Set.empty
 
-  def availableServices: Set[ProvidedService] = providedServices.filter(_.freeInstances>0)
+  def availableServices: Set[ProvidedService] =
+    providedServices.filter(_.freeInstances>0) -- offeredServices.keys
 
   def task: Option[Task] =
     if(node.has("task"))
@@ -41,7 +42,17 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     } else {
       classicServiceDiscovery()
     }
+  }
 
+  def offeredServices: Map[ProvidedService,TaskRequest] = if(node.has("offeredServices")){
+    node.get[Map[ProvidedService,TaskRequest]]("offeredServices")
+  } else {
+    node.put("offeredServices", Map.empty)
+    Map.empty
+  }
+
+  def addOfferedService(tr: TaskRequest, ns: ProvidedService) = {
+    node.put("offeredServices", offeredServices + (ns -> tr))
   }
 
   def classicServiceDiscovery() = {
@@ -115,7 +126,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   def chooseFromOffers(req: TaskRequest, offers: Map[ID,Service]): Map[Service,ID] = {
     var servicesToAlloc = req.missingServices
     var newAllocations = Map[Service,ID]()
-    for(offer <- offers){
+    for(offer <- offers.toList.sortBy(_._1)){
       if(servicesToAlloc.contains(offer._2)){
         newAllocations += offer.swap
         servicesToAlloc -= offer._2
@@ -159,23 +170,17 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
       node.put(pid+"request", receivedRequest)
       node.put(pid+"requestBy", receivedRequest.taskRequest.requestor%20)
 
-      val offeredService: Option[Service] =
-        receivedRequest.taskRequest.allocation.find(_._2 == mid).map(_._1) // keep current allocation
-          .orElse[Service] { // or offer an available service
-            receivedRequest.taskRequest.missingServices.collectFirst { case s if availableServices.exists(_.service == s) => s }
-          }
+      val servicesToOffer: Set[Service] =
+        (offeredServices.filter(_._2 == receivedRequest.taskRequest).keys ++ receivedRequest.taskRequest.missingServices.flatMap(s => {
+          val newServiceToOffer = availableServices.find(_.service == s).toSet
+          newServiceToOffer.foreach(ns => addOfferedService(receivedRequest.taskRequest, ns))
+          newServiceToOffer
+        })).map(_.service).toSet
 
-      node.put("offeredServices",
-        (if(node.has("offeredServices")) node.get[Set[Service]]("offeredServices") else Set.empty) ++ offeredService.toSet)
-      node.put("numOfferedServices", node.get[Set[Service]]("offeredServices").size)
+      node.put("numOfferedServices", offeredServices.size)
 
-      allocatedServices = Set.empty
-      offeredService.foreach { s =>
-        allocatedServices += ProvidedService(s)()
-      }
-
-      val offers = C[Double, Map[ID, Service]](gHops, _ ++ _, offeredService.map(s => Map(mid -> s)).getOrElse(Map.empty), Map.empty)
-      hops = C[Double,Map[ID,Int]](gHops, _++_, offeredService.map(s => Map(mid -> gHops)).getOrElse(Map.empty), Map.empty)
+      val offers = C[Double, Map[ID, Service]](gHops, _ ++ _, servicesToOffer.map(s => mid -> s).toMap, Map.empty)
+      hops = C[Double,Map[ID,Int]](gHops, _++_, servicesToOffer.map(s => mid -> gHops).toMap, Map.empty)
       val maxExt = C[Double,Int](g, Math.max(_,_), gHops, -1)
       val newTaskRequest = taskRequest.copy()(allocation = chooseFromOffers(taskRequest, offers))
 

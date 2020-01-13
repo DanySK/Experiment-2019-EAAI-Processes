@@ -36,6 +36,14 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     node.put("offeredServices", offeredServices + (ns -> tr))
   }
 
+  def removeOfferedService(ns: Service) = {
+    node.put("offeredServices", offeredServices - providedService(ns))
+  }
+
+  def providedService(ns: Service): ProvidedService = {
+    providedServices.find(_.service == ns).get
+  }
+
   // Available services are those that are not already offered
   def availableServices: Set[ProvidedService] =
     providedServices.filter(_.freeInstances>0) -- offeredServices.keys
@@ -89,22 +97,31 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
         else if(receivedRequest.isDefined) node.put("requestBy", receivedRequest.get.requestor%20)
 
         // A node receiving a task request can offer "missing" services that are locally available
-        val offeredService: Option[Service] = receivedRequest.flatMap { request =>
-          request.allocation.find(_._2 == mid).map(_._1) // keep current allocation (I continue to offer services that I already offered)
-            .orElse[Service] { // or offer an available service
-              request.missingServices.collectFirst { case s if availableServices.exists(_.service == s) => s }
-            }
-        }
-        node.put("offersService", offeredService.isDefined)
-        node.put("offeredService", offeredService)
+        val offeredServs: Set[Service] = receivedRequest.map { request =>
+          // keep current allocation (I continue to offer services that I already offer)
+          val currentlyOffered = request.allocation.filter(_._2 == mid).keySet
+          // more allocations?
+          val newOffers = request.missingServices.filter(ms => {
+            val newOfferedService = availableServices.find(as => as.service == ms)
+            newOfferedService.foreach(s => addOfferedService(request, s))
+            newOfferedService.isDefined
+          })
+          // Make again available an offered service if the requestor has chosen the service from another device
+          for(alloc <- request.allocation if alloc._2!=mid)
+              removeOfferedService(alloc._1)
+          // Make again available an offered service if the requestor has changed
+          for(os <- offeredServices if os._2.requestor != request.requestor)
+            removeOfferedService(os._1.service)
+          currentlyOffered ++ newOffers
+        }.getOrElse(Set.empty)
+        node.put("offersService", !offeredServs.isEmpty)
+        node.put("offeredService", offeredServs)
 
-        allocatedServices = Set.empty
-        offeredService.foreach { s =>
-          allocatedServices += ProvidedService(s)()
-        }
-
-        val offers = C[Double, Map[ID, Service]](g, _ ++ _, offeredService.map(s => Map(mid -> s)).getOrElse(Map.empty), Map.empty)
-        hops = C[Double,Map[ID,Int]](g, _++_, offeredService.map(s => Map(mid -> gHops)).getOrElse(Map.empty), Map.empty)
+        // Collect offers to requestor
+        val offers = C[Double, Map[ID, Service]](g, _ ++ _, offeredServs.map(s => mid -> s).toMap, Map.empty)
+        // Collect distance from offers to requestor
+        hops = C[Double,Map[ID,Int]](g, _++_, offeredServs.map(s => mid -> gHops).toMap, Map.empty)
+        // Update allocations based on offers
         localTaskRequest.map(t => t.copy()(allocation = chooseFromOffers(t, offers)))
     }
 
@@ -121,6 +138,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     // Condition for task removal (accomplishment)
     val accomplished = keepFor > node.get[Number]("taskPropagationTime").longValue
     val giveUp = tryFor > node.get[Number]("taskConclusionTime").longValue
+    // If the task is accomplished or the requestor gives up (certain services cannot be looked up), remove the task and record data
     if((accomplished || giveUp) && node.has("task")){
       node.remove("task")
       val latency: Int = (timestamp()-node.get[Long]("taskTime")).toInt
@@ -165,10 +183,11 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   }
 
   def serviceDiscoveryProcess(taskRequest: TaskRequest)(args: Unit): (TaskRequest, Status) = {
+    // Build a gradient from the souce (which is the requestor of the task and the initiator of the process)
     val source = taskRequest.requestor==mid
     val gHops = hopGradient(source)
-    val g = classicGradient(source)
 
+    // Boolean variable indicating whether a device should quit the bubble or not
     var continueExpansion = true
     var hops: Map[ID,Int] = Map.empty
 
@@ -178,13 +197,17 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
     case class State(currentDistance: Int = 0, taskRequest: TaskRequest = taskRequest)
     val s = rep(State()){ oldState =>
+      // Broadcast state from the source
       val receivedRequest = bcast(source, oldState)
+
+      // The bubble must expand up to the num of hops indicated by the source
       continueExpansion = receivedRequest.currentDistance >= gHops-1 // && !receivedRequest.taskRequest.missingServices.isEmpty
 
       node.put(pid+"receivedRequest", receivedRequest)
       node.put(pid+"request", receivedRequest)
       node.put(pid+"requestBy", receivedRequest.taskRequest.requestor%20)
 
+      // Determine the services which can be offered
       val servicesToOffer: Set[Service] =
         (offeredServices.filter(_._2 == receivedRequest.taskRequest).keys ++ receivedRequest.taskRequest.missingServices.flatMap(s => {
           val newServiceToOffer = availableServices.find(_.service == s).toSet
@@ -194,12 +217,17 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
       node.put("numOfferedServices", offeredServices.size)
 
+      // Collect offers to the requestor
       val offers = C[Double, Map[ID, Service]](gHops, _ ++ _, servicesToOffer.map(s => mid -> s).toMap, Map.empty)
+      // Collect hops (distance) from providers to the requestor
       hops = C[Double,Map[ID,Int]](gHops, _++_, servicesToOffer.map(s => mid -> gHops).toMap, Map.empty)
+      // Collect the bubble diameter to the requestor
       val maxExt = C[Double,Int](gHops, Math.max(_,_), gHops, -1)
+      // Update allocation based on service offers
       val newTaskRequest = receivedRequest.taskRequest.copy()(allocation = chooseFromOffers(receivedRequest.taskRequest, offers))
 
-      State(maxExt, newTaskRequest)
+      // Ask for expansion only if there are still some services to be provided
+      State(if(newTaskRequest.missingServices.isEmpty) maxExt-1 else maxExt, newTaskRequest)
     }
 
     node.put(pid+"state", s)

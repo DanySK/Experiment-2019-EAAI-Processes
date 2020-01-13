@@ -23,13 +23,16 @@ variables:
   socCount: &socCount
     formula: 100
   algorithm: &algorithm
-    type: Flag
-    parameters: [false]
+    type: ArbitraryVariable
+    parameters: [false [false]]
 
 export:
   - time
   - molecule: taskHops
     aggregators: [mean]
+    value-filter: FilterNaN
+  - molecule: hasTask
+    aggregators: [sum]
     value-filter: FilterNaN
   - molecule: tasks
     aggregators: [sum]

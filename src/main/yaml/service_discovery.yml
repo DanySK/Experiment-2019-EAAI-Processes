@@ -3,9 +3,19 @@ incarnation: scafi
 variables:
   seed: &seed
     min: 0
-    max: 2
+    max: 9
     step: 1
     default: 0
+  cloudcost: &cloudcost
+    type: ArbitraryVariable
+    parameters: [15, [0, 1, 5, 10, 15, 20, 30, 50]]
+  taskFrequency: &taskFrequency
+    type: ArbitraryVariable
+    parameters: [0.01, [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1]]
+  taskPropagationTime: &taskPropagationTime
+    formula: 10
+  taskConclusionTime: &taskConclusionTime
+    formula: 100
   serverCount: &serverCount
     formula: 10
   desktopCount: &desktopCount
@@ -13,11 +23,17 @@ variables:
   socCount: &socCount
     formula: 100
   algorithm: &algorithm
-    type: Flag
-    parameters: [false]
+    type: ArbitraryVariable
+    parameters: [false, [false, true]]
 
 export:
   - time
+  - molecule: taskHops
+    aggregators: [mean]
+    value-filter: FilterNaN
+  - molecule: hasTask
+    aggregators: [sum]
+    value-filter: FilterNaN
   - molecule: tasks
     aggregators: [sum]
     value-filter: FilterNaN
@@ -28,9 +44,6 @@ export:
     aggregators: [sum]
     value-filter: FilterNaN
   - molecule: taskLatency
-    aggregators: [sum]
-    value-filter: FilterNaN
-  - molecule: taskHops
     aggregators: [sum]
     value-filter: FilterNaN
 
@@ -55,7 +68,7 @@ pools:
   - pool: &taskGenerator
       - time-distribution:
           type: ExponentialTime
-          parameters: [0.005] # lambda (mean freq)
+          parameters: [*taskFrequency] # lambda (mean freq)
         type: Event
         actions:
           - type: RunScafiProgram
@@ -67,14 +80,22 @@ displacements:
     contents:
       - molecule: "algorithm"
         concentration: *algorithm
+      - molecule: cloudcost
+        concentration: *cloudcost
       - molecule: tasks
         concentration: 0
+      - molecule: taskHops
+        concentration: Double.NaN
       - molecule: completedTasks
         concentration: 0
       - molecule: giveupTasks
         concentration: 0
       - molecule: taskLatency
         concentration: 0
+      - molecule: taskPropagationTime
+        concentration: *taskPropagationTime
+      - molecule: taskConclusionTime
+        concentration: *taskConclusionTime
     programs:
       - *program
   - in:
@@ -83,6 +104,10 @@ displacements:
     contents:
       - molecule: "algorithm"
         concentration: *algorithm
+      - molecule: cloudcost
+        concentration: *cloudcost
+      - molecule: taskHops
+        concentration: Double.NaN
       - molecule: tasks
         concentration: 0
       - molecule: completedTasks
@@ -91,6 +116,10 @@ displacements:
         concentration: 0
       - molecule: taskLatency
         concentration: 0
+      - molecule: taskPropagationTime
+        concentration: *taskPropagationTime
+      - molecule: taskConclusionTime
+        concentration: *taskConclusionTime
     programs:
       - *program
       - *taskGenerator
@@ -100,6 +129,10 @@ displacements:
     contents:
       - molecule: "algorithm"
         concentration: *algorithm
+      - molecule: cloudcost
+        concentration: *cloudcost
+      - molecule: taskHops
+        concentration: Double.NaN
       - molecule: tasks
         concentration: 0
       - molecule: completedTasks
@@ -108,6 +141,10 @@ displacements:
         concentration: 0
       - molecule: taskLatency
         concentration: 0
+      - molecule: taskPropagationTime
+        concentration: *taskPropagationTime
+      - molecule: taskConclusionTime
+        concentration: *taskConclusionTime
     programs:
       - *program
       - *taskGenerator

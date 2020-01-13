@@ -18,7 +18,7 @@ class TaskGenerator extends AggregateProgram with StandardSensors with ScafiAlch
     branch(!node.has("task")) {
       val k = rep(0)(x => if(x==0) 1 else 2)
 
-      if(k==2 && timestamp() < 250) {
+      if(k == 2) { // && timestamp() < 250) {
         val task = Task(
           (randomGenerator().shuffle(services) -- providedServices.map(_.service))
             .take(1 + randomGenerator().nextInt(3))

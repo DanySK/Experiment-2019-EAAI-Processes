@@ -1,10 +1,13 @@
 # Goal is to show reactivity to spikes of load, withstanding leader failures, and the benefit of an updated metric
 the_plots_labels:
+#taskHops[Mean] tasks[Sum] completedTasks[Sum] giveupTasks[Sum] taskLatency[Sum]
   - Time                 #0
-  - '# tasks'
-  - '# completed'
-  - '# giveup'
-  - 'latency'
+  - Cost
+  - Running tasks
+  - Total tasks
+  - Tasks using edge alone
+  - Tasks using Cloud
+  - Latency
 the_plots_formats:
   - [0,1,2,3]
   - [0,4]

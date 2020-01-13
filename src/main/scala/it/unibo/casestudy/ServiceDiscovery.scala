@@ -10,12 +10,15 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
   import Spawn._
 
-  lazy val providedServices: Set[ProvidedService] =
+  lazy val providedServices: Set[ProvidedService] = {
+    if(alchemistRandomGen.nextDouble() < 0.25)
     randomGenerator()
       .shuffle(services)
       .take(randomGenerator().nextInt(services.size))
       .map(s => ProvidedService(s)(numInstances = 1)
     )
+    else Set.empty
+  }
 
   var allocatedServices: Set[ProvidedService] = Set.empty
 
@@ -126,25 +129,35 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   def processBasedServiceDiscovery() = {
     val theTask = task.map(t => TaskRequest(mid, t)(allocation = Map.empty)).toSet
 
-    sspawn[TaskRequest, Unit, TaskRequest](serviceDiscoveryProcess, theTask, ())
+    val procs = sspawn[TaskRequest, Unit, TaskRequest](serviceDiscoveryProcess, theTask, ())
+    node.put("procs", procs)
+    node.put("numProcs", procs.size)
+    node.put("numProcsOthers", procs.count(_._2.requestor!=mid))
+    node.put("numProcsMine", procs.count(_._2.requestor==mid))
+
+    procs.filter(_._2.requestor==mid)
   }
 
   def serviceDiscoveryProcess(taskRequest: TaskRequest)(args: Unit): (TaskRequest, Status) = {
     val source = taskRequest.requestor==mid
     val gHops = hopGradient(source)
+    val g = classicGradient(source)
 
     var continueExpansion = true
     var hops: Map[ID,Int] = Map.empty
 
-    case class State(currentDistance: Int = 0, taskRequest: TaskRequest = taskRequest)
-    rep(State()){ s =>
-      val receivedRequest = bcast(source, s)
-      continueExpansion = s.currentDistance==gHops && !s.taskRequest.missingServices.isEmpty
+    val pid = s"proc_${taskRequest.hashCode()}_"
 
-      node.put("receivedRequest", receivedRequest)
-      node.put("request", receivedRequest)
-      if(node.has("requestBy")) node.remove("requestBy")
-      else  node.put("requestBy", receivedRequest.taskRequest.requestor%20)
+    node.put(pid+"hops", gHops)
+
+    case class State(currentDistance: Int = 0, taskRequest: TaskRequest = taskRequest)
+    val s = rep(State()){ oldState =>
+      val receivedRequest = bcast(source, oldState)
+      continueExpansion = receivedRequest.currentDistance>=gHops-1 && !receivedRequest.taskRequest.missingServices.isEmpty
+
+      node.put(pid+"receivedRequest", receivedRequest)
+      node.put(pid+"request", receivedRequest)
+      node.put(pid+"requestBy", receivedRequest.taskRequest.requestor%20)
 
       val offeredService: Option[Service] =
         receivedRequest.taskRequest.allocation.find(_._2 == mid).map(_._1) // keep current allocation
@@ -152,8 +165,9 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
             receivedRequest.taskRequest.missingServices.collectFirst { case s if availableServices.exists(_.service == s) => s }
           }
 
-      node.put("offersService", offeredService.isDefined)
-      node.put("offeredService", offeredService)
+      node.put("offeredServices",
+        (if(node.has("offeredServices")) node.get[Set[Service]]("offeredServices") else Set.empty) ++ offeredService.toSet)
+      node.put("numOfferedServices", node.get[Set[Service]]("offeredServices").size)
 
       allocatedServices = Set.empty
       offeredService.foreach { s =>
@@ -162,18 +176,59 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
       val offers = C[Double, Map[ID, Service]](gHops, _ ++ _, offeredService.map(s => Map(mid -> s)).getOrElse(Map.empty), Map.empty)
       hops = C[Double,Map[ID,Int]](gHops, _++_, offeredService.map(s => Map(mid -> gHops)).getOrElse(Map.empty), Map.empty)
+      val maxExt = C[Double,Int](g, Math.max(_,_), gHops, -1)
       val newTaskRequest = taskRequest.copy()(allocation = chooseFromOffers(taskRequest, offers))
 
-      State(gHops, newTaskRequest)
-    } match {
-      case State(hops,taskReq) if source && taskReq.missingServices.isEmpty => (taskReq, Terminated)
-      case s => (s.taskRequest, if(continueExpansion) Bubble else External)
+      State(maxExt, newTaskRequest)
     }
+
+    node.put(pid+"state", s)
+
+    // Time a device is trying to satisfy a task
+    val tryFor: Long = branch(taskRequest.missingServices.nonEmpty){
+      val start = rep(timestamp())(x => x)
+      timestamp() - start
+    }{ 0 }
+    // Time a device has a task satisfied
+    val keepFor: Long = branch(taskRequest.missingServices.isEmpty){
+      val start = rep(timestamp())(x => x)
+      timestamp() - start
+    }{ 0 }
+    // Condition for task removal (accomplishment)
+    val accomplished = keepFor > node.get[Number]("taskPropagationTime").longValue
+    val giveUp = tryFor > node.get[Number]("taskConclusionTime").longValue
+    val done = accomplished || giveUp
+    if(done && node.has("task") && node.get("task")==taskRequest.task){
+      node.remove("task")
+      val latency: Int = (timestamp()-node.get[Long]("taskTime")).toInt
+      node.put("taskLatency", if(node.has("taskLatency")) node.get[Int]("taskLatency")+latency else latency)
+      val numHops: Int = taskRequest.allocation.values.map(hops(_)).sum
+      val cloudHops: Int = taskRequest.missingServices.map(_ => node.get[Int]("cloudcost")).sum
+      val totalHops = numHops + cloudHops
+      node.put("taskHops", if(node.has("taskHops")) node.get[Number]("taskHops").intValue() + totalHops else totalHops)
+      if(accomplished) {
+        node.put("completedTasks", if(node.has("completedTasks")) node.get[Int]("completedTasks")+1 else 1)
+      }
+      if(giveUp) {
+        node.put("giveupTasks", if(node.has("giveupTasks")) node.get[Int]("giveupTasks")+1 else 1)
+      }
+    }
+
+    val res = s match {
+      case s if source && done => (s.taskRequest, Terminated)
+      case s if source => (s.taskRequest, Output)
+      case s => (s.taskRequest, if(continueExpansion) Output else External)
+    }
+
+    node.put(pid+"output", res)
+
+    res
   }
 
   // Other stuff
 
-  def hopGradient(src: Boolean): Int = G(src, 0, _+1, nbrRange _)
+  def hopGradient(src: Boolean): Int =
+    classicGradient(src, () => 1).toInt
 
   def bcast[V](source: Boolean, field: V): V =
     G[V](source, field, v => v, nbrRange _)

@@ -11,7 +11,7 @@ variables:
     parameters: [15, [0, 1, 5, 10, 15, 20, 30, 50]]
   taskFrequency: &taskFrequency
     type: ArbitraryVariable
-    parameters: [0.01, [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1]]
+    parameters: [0.001, [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1]]
   taskPropagationTime: &taskPropagationTime
     formula: 10
   taskConclusionTime: &taskConclusionTime
@@ -24,7 +24,7 @@ variables:
     formula: 100
   algorithm: &algorithm
     type: ArbitraryVariable
-    parameters: [false, [false, true]]
+    parameters: [true, [false, true]]
 
 export:
   - time

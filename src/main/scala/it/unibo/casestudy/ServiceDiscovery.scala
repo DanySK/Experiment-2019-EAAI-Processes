@@ -124,10 +124,56 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   }
 
   def processBasedServiceDiscovery() = {
+    val theTask = task.map(t => TaskRequest(mid, t)(allocation = Map.empty)).toSet
 
+    sspawn[TaskRequest, Unit, TaskRequest](serviceDiscoveryProcess, theTask, ())
+  }
+
+  def serviceDiscoveryProcess(taskRequest: TaskRequest)(args: Unit): (TaskRequest, Status) = {
+    val source = taskRequest.requestor==mid
+    val gHops = hopGradient(source)
+
+    var continueExpansion = true
+    var hops: Map[ID,Int] = Map.empty
+
+    case class State(currentDistance: Int = 0, taskRequest: TaskRequest = taskRequest)
+    rep(State()){ s =>
+      val receivedRequest = bcast(source, s)
+      continueExpansion = s.currentDistance==gHops && !s.taskRequest.missingServices.isEmpty
+
+      node.put("receivedRequest", receivedRequest)
+      node.put("request", receivedRequest)
+      if(node.has("requestBy")) node.remove("requestBy")
+      else  node.put("requestBy", receivedRequest.taskRequest.requestor%20)
+
+      val offeredService: Option[Service] =
+        receivedRequest.taskRequest.allocation.find(_._2 == mid).map(_._1) // keep current allocation
+          .orElse[Service] { // or offer an available service
+            receivedRequest.taskRequest.missingServices.collectFirst { case s if availableServices.exists(_.service == s) => s }
+          }
+
+      node.put("offersService", offeredService.isDefined)
+      node.put("offeredService", offeredService)
+
+      allocatedServices = Set.empty
+      offeredService.foreach { s =>
+        allocatedServices += ProvidedService(s)()
+      }
+
+      val offers = C[Double, Map[ID, Service]](gHops, _ ++ _, offeredService.map(s => Map(mid -> s)).getOrElse(Map.empty), Map.empty)
+      hops = C[Double,Map[ID,Int]](gHops, _++_, offeredService.map(s => Map(mid -> gHops)).getOrElse(Map.empty), Map.empty)
+      val newTaskRequest = taskRequest.copy()(allocation = chooseFromOffers(taskRequest, offers))
+
+      State(gHops, newTaskRequest)
+    } match {
+      case State(hops,taskReq) if source && taskReq.missingServices.isEmpty => (taskReq, Terminated)
+      case s => (s.taskRequest, if(continueExpansion) Bubble else External)
+    }
   }
 
   // Other stuff
+
+  def hopGradient(src: Boolean): Int = G(src, 0, _+1, nbrRange _)
 
   def bcast[V](source: Boolean, field: V): V =
     G[V](source, field, v => v, nbrRange _)

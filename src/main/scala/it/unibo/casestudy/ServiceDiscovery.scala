@@ -179,6 +179,10 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     node.put("numProcsOthers", procs.count(_._2.requestor!=mid))
     node.put("numProcsMine", procs.count(_._2.requestor==mid))
 
+    for(os <- offeredServices if !procs.contains(os._2)){
+      removeOfferedService(os._1.service)
+    }
+
     procs.filter(_._2.requestor==mid)
   }
 

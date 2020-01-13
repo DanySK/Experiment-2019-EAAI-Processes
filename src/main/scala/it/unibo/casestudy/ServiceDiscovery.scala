@@ -10,8 +10,9 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
   import Spawn._
 
+  // Randomly initialises the set of services provided by a node
   lazy val providedServices: Set[ProvidedService] = {
-    if(alchemistRandomGen.nextDouble() < 0.25)
+    if(alchemistRandomGen.nextDouble() < node.get[Double]("hasServiceProbability"))
     randomGenerator()
       .shuffle(services)
       .take(randomGenerator().nextInt(services.size))
@@ -20,30 +21,10 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     else Set.empty
   }
 
+  // Set of services currently allocated for a task (these should be checked before being advertised)
   var allocatedServices: Set[ProvidedService] = Set.empty
 
-  def availableServices: Set[ProvidedService] =
-    providedServices.filter(_.freeInstances>0) -- offeredServices.keys
-
-  def task: Option[Task] =
-    if(node.has("task"))
-      Some(node.get[Task]("task"))
-    else
-      None
-
-  override def main(): Any = {
-    node.put("providedServices", providedServices)
-    node.put("hasTask", task.isDefined)
-    node.put("t_time", currentTime())
-    node.put("t_timestamp", timestamp())
-
-    if(node.get[Boolean]("algorithm")){
-      processBasedServiceDiscovery()
-    } else {
-      classicServiceDiscovery()
-    }
-  }
-
+  // Same as the previous property, but used only in the spawn-based algorithm
   def offeredServices: Map[ProvidedService,TaskRequest] = if(node.has("offeredServices")){
     node.get[Map[ProvidedService,TaskRequest]]("offeredServices")
   } else {
@@ -55,6 +36,33 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     node.put("offeredServices", offeredServices + (ns -> tr))
   }
 
+  // Available services are those that are not already offered
+  def availableServices: Set[ProvidedService] =
+    providedServices.filter(_.freeInstances>0) -- offeredServices.keys
+
+  // Holds a task that the node must accomplish by asking services to other devices
+  def task: Option[Task] =
+    if(node.has("task"))
+      Some(node.get[Task]("task"))
+    else
+      None
+
+  // Main program
+  override def main(): Any = {
+    node.put("providedServices", providedServices)
+    node.put("hasTask", task.isDefined)
+    node.put("t_time", currentTime())
+    node.put("t_timestamp", timestamp())
+
+    if(node.get[Boolean]("algorithm")){
+      // Algorithm 1: uses a gradient to propagate request and collect services
+      processBasedServiceDiscovery()
+    } else {
+      // Algorithm 2: same as Algorithm 1 but uses aggregate processes (spawn) to create overlapping service discovery bubbles
+      classicServiceDiscovery()
+    }
+  }
+
   def classicServiceDiscovery() = {
     val hasTask = task.isDefined
     val g = classicGradient(hasTask)
@@ -64,18 +72,25 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     var taskChanged = false
     var hops: Map[ID,Int] = Map.empty
 
+    // Task request includes services needed to accomplish a task + current allocations (services + providers)
+    // Notice that variable 'task' is non-empty only in the initiator (i.e., the device which must accomplish a task)
     val taskRequest = rep[Option[TaskRequest]](None) { tr =>
+        // Checks whether the task to be accomplished is different
         val theTask = task.map(t => TaskRequest(mid, t)(allocation = Map.empty))
         taskChanged = theTask != tr
         val localTaskRequest = if(tr==theTask) tr else theTask
+
+        // The task executor broadcast the task request
         val receivedRequest = bcast(hasTask, localTaskRequest)
         node.put("receivedRequest", receivedRequest.isDefined)
         node.put("request", receivedRequest)
+
         if(receivedRequest.isEmpty && node.has("requestBy")) node.remove("requestBy")
         else if(receivedRequest.isDefined) node.put("requestBy", receivedRequest.get.requestor%20)
 
+        // A node receiving a task request can offer "missing" services that are locally available
         val offeredService: Option[Service] = receivedRequest.flatMap { request =>
-          request.allocation.find(_._2 == mid).map(_._1) // keep current allocation
+          request.allocation.find(_._2 == mid).map(_._1) // keep current allocation (I continue to offer services that I already offered)
             .orElse[Service] { // or offer an available service
               request.missingServices.collectFirst { case s if availableServices.exists(_.service == s) => s }
             }

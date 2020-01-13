@@ -25,6 +25,8 @@ variables:
   algorithm: &algorithm
     type: ArbitraryVariable
     parameters: [true, [false, true]]
+  hasServiceProbability: &hasServiceProbability
+    formula: 0.5
 
 export:
   - time
@@ -98,6 +100,8 @@ displacements:
         concentration: *taskPropagationTime
       - molecule: taskConclusionTime
         concentration: *taskConclusionTime
+      - molecule: hasServiceProbability
+        concentration: *hasServiceProbability
     programs:
       - *program
   - in:
@@ -124,6 +128,8 @@ displacements:
         concentration: *taskPropagationTime
       - molecule: taskConclusionTime
         concentration: *taskConclusionTime
+      - molecule: hasServiceProbability
+        concentration: *hasServiceProbability
     programs:
       - *program
       - *taskGenerator
@@ -151,6 +157,8 @@ displacements:
         concentration: *taskPropagationTime
       - molecule: taskConclusionTime
         concentration: *taskConclusionTime
+      - molecule: hasServiceProbability
+        concentration: *hasServiceProbability
     programs:
       - *program
       - *taskGenerator

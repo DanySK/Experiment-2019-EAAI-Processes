@@ -37,11 +37,11 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   }
 
   def removeOfferedService(ns: Service) = {
-    node.put("offeredServices", offeredServices - providedService(ns))
+    providedService(ns).foreach(ps => node.put("offeredServices", offeredServices - ps))
   }
 
-  def providedService(ns: Service): ProvidedService = {
-    providedServices.find(_.service == ns).get
+  def providedService(ns: Service): Option[ProvidedService] = {
+    providedServices.find(_.service == ns)
   }
 
   // Available services are those that are not already offered

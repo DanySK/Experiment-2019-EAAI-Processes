@@ -1,6 +1,6 @@
 #!/bin/bash
 for file in data/*
-  do LASTLINE="`tac "${file}" | egrep -m 1 .`"
+  do LASTLINE="$(tail -n 1 $file)"
   if [ "${LASTLINE:0:1}" == "#" ]
     then git add -f "${file}"
   fi

@@ -1,6 +1,8 @@
 import numpy as np
 import xarray as xr
 import re
+from pathlib import Path
+import collections
 
 def distance(val, ref):
     return abs(ref - val)
@@ -71,13 +73,20 @@ def extractCoordinates(filename):
 
     """
     with open(filename, 'r') as file:
-        regex = re.compile(' (?P<varName>[a-zA-Z._-]+) = (?P<varValue>[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?),?')
-        dataBegin = re.compile('\d')
+#        regex = re.compile(' (?P<varName>[a-zA-Z._-]+) = (?P<varValue>[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?),?')
+        regex = r"(?P<varName>[a-zA-Z._-]+) = (?P<varValue>[^,]*),?"
+        dataBegin = r"\d"
+        is_float = r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?"
         for line in file:
-            match = regex.findall(line)
+            match = re.findall(regex, line)
             if match:
-                return {var : float(value) for var, value in match}
-            elif dataBegin.match(line[0]):
+                return {
+                    var : float(value) if re.match(is_float, value)
+                        else bool(re.match(r".*?true.*?", value.lower())) if re.match(r".*?(true|false).*?", value.lower())
+                        else value
+                    for var, value in match
+                }
+            elif re.match(dataBegin, line[0]):
                 return {}
 
 def extractVariableNames(filename):
@@ -132,6 +141,8 @@ if __name__ == '__main__':
     # CONFIGURE SCRIPT
     # Where to find Alchemist data files
     directory = 'data'
+    # Where to save charts
+    output_directory = 'charts'
     # How to name the summary of the processed data
     pickleOutput = 'data_summary'
     # Experiment prefixes: one per experiment (root of the file name)
@@ -141,11 +152,13 @@ if __name__ == '__main__':
     timeSamples = 600
     # time management
     minTime = 0
-    maxTime = 3600
+    maxTime = 900
     timeColumnName = 'time'
     logarithmicTime = False
     # One or more variables are considered random and "flattened"
     seedVars = ['seed']
+    # One variable that represent values to be compared
+    comparison_variable = 'algorithm'
     
     # Setup libraries
     np.set_printoptions(formatter={'float': floatPrecision.format})
@@ -229,32 +242,61 @@ if __name__ == '__main__':
         pickle.dump(means, open(pickleOutput + '_mean', 'wb'), protocol=-1)
         pickle.dump(stdevs, open(pickleOutput + '_std', 'wb'), protocol=-1)
         pickle.dump(newestFileTime, open('timeprocessed', 'wb'))
+        
+    # QUICK CHARTING
+
+    import matplotlib
+    import matplotlib.pyplot as plt
+    import matplotlib.cm as cmx
+    matplotlib.rcParams.update({'axes.titlesize': 12})
+    matplotlib.rcParams.update({'axes.labelsize': 10})
+    def make_chart(xdata, ydata, title = None, ylabel = None, xlabel = None, colors = None, linewidth = 1, errlinewidth = 0.5, figure_size = (6, 4)):
+        fig = plt.figure(figsize = figure_size)
+        ax = fig.add_subplot(1, 1, 1)
+        ax.set_title(title)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+#        ax.set_ylim(0)
+#        ax.set_xlim(min(xdata), max(xdata))
+        index = 0
+        for (label, (data, error)) in ydata.items():
+            lines = ax.plot(xdata, data, label=label, color=colors(index / (len(ydata) - 1)) if colors else None, linewidth=linewidth)
+            index += 1
+            if error:
+                last_color = lines[-1].get_color()
+                ax.plot(xdata, data+error, label=None, color=last_color, linewidth=errlinewidth)
+                ax.plot(xdata, data-error, label=None, color=last_color, linewidth=errlinewidth)
+        return (fig, ax)
+    for experiment in experiments:
+        current_experiment_means = means[experiment]
+        mergeable_variables = set(current_experiment_means.coords) - {timeColumnName, comparison_variable}
+        for current_coordinate in mergeable_variables:
+            merge_variables = mergeable_variables - { current_coordinate }
+            merge_data_view = current_experiment_means.mean(dim = merge_variables, skipna = True)
+            print(merge_data_view)
+            for current_coordinate_value in merge_data_view[current_coordinate].values:
+                for current_metric in merge_data_view.data_vars:
+                    title = current_metric + " with " + current_coordinate + "=" + str(current_coordinate_value)
+                    fig, ax = make_chart(
+                        title = title,
+                        xdata = merge_data_view[timeColumnName],
+                        xlabel = timeColumnName,
+                        ydata = {
+                            label: (merge_data_view.sel({comparison_variable: label, current_coordinate: current_coordinate_value})[current_metric], 0)
+                                for label in merge_data_view[comparison_variable].values
+                        },
+                        ylabel = current_metric
+                    )
+                    ax.legend()
+                    fig.tight_layout()
+                    Path(output_directory).mkdir(parents=True, exist_ok=True)
+                    fig.savefig(output_directory + "/" + current_metric + "_" + current_coordinate + "_" + str(current_coordinate_value) + ".pdf")
 
 #    # Prepare the charting system
-#    import matplotlib
-#    import matplotlib.pyplot as plt
-#    import matplotlib.cm as cmx
-#    matplotlib.rcParams.update({'axes.titlesize': 12})
-#    matplotlib.rcParams.update({'axes.labelsize': 10})
 ##    colormap = cmx.viridis
 #
 #    # Prepare selected charts
 #    # Evaluation of the backoff parameter
-#    def makechart(xdata, ydata, title = None, ylabel = None, xlabel = None, colors = None, linewidth = 1, errlinewidth = 0.5, figure_size = (6, 4)):
-#        fig = plt.figure(figsize = figure_size)
-#        ax = fig.add_subplot(1, 1, 1)
-#        ax.set_title(title)
-#        ax.set_xlabel(xlabel)
-#        ax.set_ylabel(ylabel)
-##        ax.set_ylim(0)
-#        ax.set_xlim(min(xdata), max(xdata))
-#        index = 0
-#        for (label, (data, error)) in ydata.items():
-#            ax.plot(xdata, data, label=label, color=colors(index / (len(ydata) - 1)) if colors else None, linewidth=linewidth)
-#            ax.plot(xdata, data+error, label=None, color=colors(index / (len(ydata) - 1)) if colors else None, linewidth=errlinewidth)
-#            ax.plot(xdata, data-error, label=None, color=colors(index / (len(ydata) - 1)) if colors else None, linewidth=errlinewidth)
-#            index += 1
-#        return (fig, ax)
 #    
 #    # CHART set 1: broadcast-time + ccast-time
 #    # CHART set 2: performance w.r.t. stage width

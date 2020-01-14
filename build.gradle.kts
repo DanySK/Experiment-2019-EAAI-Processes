@@ -143,7 +143,7 @@ fun makeTest(
     }
 }
 
-makeTest(name="sim", file = "service_discovery", sampling = 10.0, time = 3600.0, vars = setOf("seed", "cloudcost", "taskFrequency", "algorithm"), taskSize = 256)
+makeTest(name="sim", file = "service_discovery", sampling = 3.0, time = 1800.0, vars = setOf("seed", "taskFrequency", "cloudcost", "algorithm"), taskSize = 512)
 
 // makeTest(name="graphicalSim", file = "service_discovery", sampling = 10.0, time = 3600.0, vars = setOf(), taskSize = 2024, effectFile = "effects/service_discovery.aes")
 

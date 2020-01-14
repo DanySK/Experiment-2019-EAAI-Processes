@@ -118,10 +118,8 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
         node.put("offersService", offeredServs.nonEmpty)
         node.put("offeredService", offeredServs)
 
-        // Collect offers to requestor
-        val offers = C[Double, Map[ID, Service]](g, _ ++ _, offeredServs.map(s => mid -> s).toMap, Map.empty)
-        // Collect distance from offers to requestor
-        hops = C[Double,Map[ID,Int]](g, _++_, offeredServs.map(s => mid -> gHops).toMap, Map.empty)
+        // Collect offers and hops to requestor
+        val offers = C[Double, Map[ID, (Service,Int)]](g, _ ++ _, offeredServs.map(s => mid -> (s,gHops)).toMap, Map.empty)
         // Update allocations based on offers
         localTaskRequest.map(t => t.copy()(allocation = chooseFromOffers(t, offers)))
     }
@@ -157,13 +155,13 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     }
   }
 
-  def chooseFromOffers(req: TaskRequest, offers: Map[ID,Service]): Map[Service,ID] = {
+  def chooseFromOffers(req: TaskRequest, offers: Map[ID,(Service,Int)]): Map[Service,ID] = {
     var servicesToAlloc = req.missingServices
     var newAllocations = Map[Service,ID]()
     for(offer <- offers.toList.sortBy(_._1)){
-      if(servicesToAlloc.contains(offer._2)){
-        newAllocations += offer.swap
-        servicesToAlloc -= offer._2
+      if(servicesToAlloc.contains(offer._2._1)){
+        newAllocations += offer._2._1 -> offer._1
+        servicesToAlloc -= offer._2._1
       }
     }
 
@@ -222,10 +220,8 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
       node.put("numOfferedServices", offeredServices.size)
 
-      // Collect offers to the requestor
-      val offers = C[Double, Map[ID, Service]](gHops, _ ++ _, servicesToOffer.map(s => mid -> s).toMap, Map.empty)
-      // Collect hops (distance) from providers to the requestor
-      hops = C[Double,Map[ID,Int]](gHops, _++_, servicesToOffer.map(s => mid -> gHops).toMap, Map.empty)
+      // Collect offers and hops to the requestor
+      val offers = C[Double, Map[ID, (Service,Int)]](gHops, _ ++ _, servicesToOffer.map(s => mid -> (s,gHops)).toMap, Map.empty)
       // Collect the bubble diameter to the requestor
       val maxExt = C[Double,Int](gHops, Math.max, gHops, -1)
       // Update allocation based on service offers

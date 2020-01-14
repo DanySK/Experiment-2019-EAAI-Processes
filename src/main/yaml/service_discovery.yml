@@ -59,13 +59,11 @@ network-model:
 
 pools:
   - pool: &program
-      - time-distribution:
-          type: ExponentialTime
-          parameters: [1]
+      - time-distribution: 1
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [it.unibo.casestudy.ServiceDiscovery, 5.0] # second argument is retention time
+            parameters: [it.unibo.casestudy.ServiceDiscovery] # second argument is retention time
       - program: send
   - pool: &taskGenerator
       - time-distribution:
@@ -74,7 +72,7 @@ pools:
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [it.unibo.casestudy.TaskGenerator, 5.0] # second argument is retention time
+            parameters: [it.unibo.casestudy.TaskGenerator] # second argument is retention time
 displacements:
   - in:
       type: CircularArc

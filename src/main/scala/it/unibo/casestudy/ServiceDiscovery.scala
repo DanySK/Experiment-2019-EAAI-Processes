@@ -163,7 +163,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     if((accomplished || giveUp) && node.has("task")){
       node.remove("task")
       val latency: Int = (timestamp()-node.get[Long]("taskTime")).toInt
-      node.put("taskLatency", if(node.has("taskLatency")) node.get[Int]("taskLatency")+latency else latency)
+      node.put("taskLatency", if(node.has("taskLatency")) node.get[Number]("taskLatency").intValue()+latency else latency)
       val numHops: Int = taskRequest.get.allocation.values.map(mapOffers(_)._2).sum
       val cloudHops: Int = taskRequest.get.missingServices.map(_ => node.get[Number]("cloudcost").intValue()).sum
       val totalHops = numHops + cloudHops
@@ -273,16 +273,16 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     if(done && node.has("task") && node.get[Task]("task")==s.taskRequest.task){
       node.remove("task")
       val latency: Int = (timestamp()-node.get[Long]("taskTime")).toInt
-      node.put("taskLatency", if(node.has("taskLatency")) node.get[Int]("taskLatency")+latency else latency)
+      node.put("taskLatency", if(node.has("taskLatency")) node.get[Number]("taskLatency").intValue()+latency else latency)
       val numHops: Int = s.taskRequest.allocation.values.map(mapOffers(_)._2).sum
-      val cloudHops: Int = s.taskRequest.missingServices.map(_ => node.get[Int]("cloudcost")).sum
+      val cloudHops: Int = s.taskRequest.missingServices.map(_ => node.get[Number]("cloudcost").intValue()).sum
       val totalHops = numHops + cloudHops
       node.put("taskHops", if(node.has("taskHops")) node.get[Number]("taskHops").intValue() + totalHops else totalHops)
       if(accomplished) {
-        node.put("completedTasks", if(node.has("completedTasks")) node.get[Int]("completedTasks")+1 else 1)
+        node.put("completedTasks", if(node.has("completedTasks")) node.get[Number]("completedTasks").intValue() +1 else 1)
       }
       if(giveUp) {
-        node.put("giveupTasks", if(node.has("giveupTasks")) node.get[Int]("giveupTasks")+1 else 1)
+        node.put("giveupTasks", if(node.has("giveupTasks")) node.get[Number]("giveupTasks").intValue() +1 else 1)
       }
     }
 

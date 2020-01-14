@@ -2,7 +2,7 @@
 the_plots_labels:
 #taskHops[Mean] tasks[Sum] completedTasks[Sum] giveupTasks[Sum] taskLatency[Sum]
   - Time                 #0
-  - Cost
+  - Cost (# hops)
   - Running tasks
   - Total tasks
   - Tasks using edge alone
@@ -10,13 +10,14 @@ the_plots_labels:
   - Latency
 the_plots_formats:
   - [0,1,2,3]
-  - [0,4]
+  - [0,4,5]
+  - [0,6]
 #y_labels: ['# of requests', '# of requests','','% of utilization of workers']
 #file_suffixes:
 #  - errors
 line_widths:
   - [2,2,2,2,2,2,2,2,2,2,2]
-default_colors: &default_colors ["black", "black", "orange","red","yellow",
+default_colors: &default_colors ["black", "black", "orange","red","purple",
                                  "black", "blue","red",
                                  "red", "magenta", "orange", "green", "brown"]
 the_plots_colors:

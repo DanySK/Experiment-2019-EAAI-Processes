@@ -97,7 +97,8 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     node.put("gradient", f"$g%2.1f")
 
     var taskChanged = false
-    var hops: Map[ID,Int] = Map.empty
+
+    var mapOffers: Map[ID, (Service,Int)] = Map.empty
 
     // Task request includes services needed to accomplish a task + current allocations (services + providers)
     // Notice that variable 'task' is non-empty only in the initiator (i.e., the device which must accomplish a task)
@@ -140,6 +141,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
         // Collect offers and hops to requestor
         val offers = C[Double, Map[ID, (Service,Int)]](g, _ ++ _, offeredServs.map(s => mid -> (s,gHops)).toMap, Map.empty)
+        mapOffers = offers
         // Update allocations based on offers
         localTaskRequest.map(t => t.copy()(allocation = chooseFromOffers(t, offers)))
     }
@@ -162,7 +164,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
       node.remove("task")
       val latency: Int = (timestamp()-node.get[Long]("taskTime")).toInt
       node.put("taskLatency", if(node.has("taskLatency")) node.get[Int]("taskLatency")+latency else latency)
-      val numHops: Int = taskRequest.get.allocation.values.map(hops(_)).sum
+      val numHops: Int = taskRequest.get.allocation.values.map(mapOffers(_)._2).sum
       val cloudHops: Int = taskRequest.get.missingServices.map(_ => node.get[Int]("cloudcost")).sum
       val totalHops = numHops + cloudHops
       node.put("taskHops", if(node.has("taskHops")) node.get[Number]("taskHops").intValue() + totalHops else totalHops)
@@ -212,7 +214,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
     // Boolean variable indicating whether a device should quit the bubble or not
     var continueExpansion = true
-    var hops: Map[ID,Int] = Map.empty
+    var mapOffers: Map[ID, (Service,Int)] = Map.empty
 
     val pid = s"proc_${taskRequest.hashCode()}_"
 
@@ -242,6 +244,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
       // Collect offers and hops to the requestor
       val offers = C[Double, Map[ID, (Service,Int)]](gHops, _ ++ _, servicesToOffer.map(s => mid -> (s,gHops)).toMap, Map.empty)
+      mapOffers = offers
       // Collect the bubble diameter to the requestor
       val maxExt = C[Double,Int](gHops, Math.max, gHops, -1)
       // Update allocation based on service offers
@@ -271,7 +274,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
       node.remove("task")
       val latency: Int = (timestamp()-node.get[Long]("taskTime")).toInt
       node.put("taskLatency", if(node.has("taskLatency")) node.get[Int]("taskLatency")+latency else latency)
-      val numHops: Int = s.taskRequest.allocation.values.map(hops(_)).sum
+      val numHops: Int = s.taskRequest.allocation.values.map(mapOffers(_)._2).sum
       val cloudHops: Int = s.taskRequest.missingServices.map(_ => node.get[Int]("cloudcost")).sum
       val totalHops = numHops + cloudHops
       node.put("taskHops", if(node.has("taskHops")) node.get[Number]("taskHops").intValue() + totalHops else totalHops)

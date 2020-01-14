@@ -26,7 +26,7 @@ variables:
     type: ArbitraryVariable
     parameters: [true, [false, true]]
   hasServiceProbability: &hasServiceProbability
-    formula: 0.5
+    formula: 0.9
 
 export:
   - time

@@ -62,7 +62,6 @@ public class GeometricVariable<V> extends PrintableVariable<Double> {
         this.max = max;
         this.samples = samples;
         shouldRescale = decimals != MAXIMUM_DECIMALS;
-        System.out.println(defaultValue + " " + min + " " + max + " " + decimals + " " + shouldRescale);
         this.scale = Math.pow(10, decimals);
     }
 

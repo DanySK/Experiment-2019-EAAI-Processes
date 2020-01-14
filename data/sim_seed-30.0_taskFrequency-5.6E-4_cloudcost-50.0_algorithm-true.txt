@@ -1,7 +1,7 @@
 #####################################################################
-# Alchemist log file - simulation started at: 2020-01-14T14:38+0000 #
+# Alchemist log file - simulation started at: 2020-01-14T14:43+0000 #
 #####################################################################
-# seed = 30.0, taskFrequency = 5.6E-4, cloudcost = 2.0, algorithm = true
+# seed = 30.0, taskFrequency = 5.6E-4, cloudcost = 50.0, algorithm = true
 #
 # The columns have the following meaning: 
 # time taskHops[Mean] hasTask[Sum] tasks[Sum] completedTasks[Sum] giveupTasks[Sum] taskLatency[Sum] 
@@ -457,5 +457,5 @@
 898.0036339949495 2.28 0.0 64.0 64.0 0.0 887.0 
 900.0036339949495 2.28 0.0 64.0 64.0 0.0 887.0 
 #####################################################################
-# End of data export. Simulation finished at: 2020-01-14T14:41+0000 #
+# End of data export. Simulation finished at: 2020-01-14T14:45+0000 #
 #####################################################################

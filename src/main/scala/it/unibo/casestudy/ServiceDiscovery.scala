@@ -40,9 +40,8 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     providedService(ns).foreach(ps => node.put("offeredServices", offeredServices - ps))
   }
 
-  def providedService(ns: Service): Option[ProvidedService] = {
+  def providedService(ns: Service): Option[ProvidedService] =
     providedServices.find(_.service == ns)
-  }
 
   // Available services are those that are not already offered
   def availableServices: Set[ProvidedService] =
@@ -107,14 +106,16 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
             newOfferedService.isDefined
           })
           // Make again available an offered service if the requestor has chosen the service from another device
-          for(alloc <- request.allocation if alloc._2!=mid)
+          for(alloc <- request.allocation if alloc._2!=mid) {
               removeOfferedService(alloc._1)
+          }
           // Make again available an offered service if the requestor has changed
-          for(os <- offeredServices if os._2.requestor != request.requestor)
+          for(os <- offeredServices if os._2.requestor != request.requestor) {
             removeOfferedService(os._1.service)
+          }
           currentlyOffered ++ newOffers
         }.getOrElse(Set.empty)
-        node.put("offersService", !offeredServs.isEmpty)
+        node.put("offersService", offeredServs.nonEmpty)
         node.put("offeredService", offeredServs)
 
         // Collect offers to requestor
@@ -226,7 +227,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
       // Collect hops (distance) from providers to the requestor
       hops = C[Double,Map[ID,Int]](gHops, _++_, servicesToOffer.map(s => mid -> gHops).toMap, Map.empty)
       // Collect the bubble diameter to the requestor
-      val maxExt = C[Double,Int](gHops, Math.max(_,_), gHops, -1)
+      val maxExt = C[Double,Int](gHops, Math.max, gHops, -1)
       // Update allocation based on service offers
       val newTaskRequest = receivedRequest.taskRequest.copy()(allocation = chooseFromOffers(receivedRequest.taskRequest, offers))
 

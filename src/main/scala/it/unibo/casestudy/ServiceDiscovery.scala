@@ -10,6 +10,26 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
   import Spawn._
 
+  override def spawn[A, B, C](process: A => B => (C, Boolean), params: Set[A], args: B): Map[A,C] = {
+    share(Map[A, C]()) { case (_, nbrProcesses) => {
+      // 1. Take active process instances from my neighbours
+      val nbrProcs = includingSelf.unionHoodSet(nbrProcesses().keySet)
+
+      // 2. New processes to be spawn, based on a generation condition
+      val newProcs = params
+
+      // 3. Collect all process instances to be executed, execute them and update their state
+      (nbrProcs.view ++ newProcs)
+        .map { case arg =>
+          val p = ProcInstance(arg)(a => { process(a) })
+          vm.newExportStack
+          val result = p.run(args)
+          if(result.value.get._2) vm.mergeExport else vm.discardExport
+          arg -> result
+        }.collect { case(p,pi) if pi.value.get._2 => p -> pi.value.get._1 }.toMap
+    } }
+  }
+
   // Randomly initialises the set of services provided by a node
   lazy val providedServices: Set[ProvidedService] = {
     if(alchemistRandomGen.nextDouble() < node.get[Double]("hasServiceProbability"))
@@ -118,10 +138,8 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
         node.put("offersService", offeredServs.nonEmpty)
         node.put("offeredService", offeredServs)
 
-        // Collect offers to requestor
-        val offers = C[Double, Map[ID, Service]](g, _ ++ _, offeredServs.map(s => mid -> s).toMap, Map.empty)
-        // Collect distance from offers to requestor
-        hops = C[Double,Map[ID,Int]](g, _++_, offeredServs.map(s => mid -> gHops).toMap, Map.empty)
+        // Collect offers and hops to requestor
+        val offers = C[Double, Map[ID, (Service,Int)]](g, _ ++ _, offeredServs.map(s => mid -> (s,gHops)).toMap, Map.empty)
         // Update allocations based on offers
         localTaskRequest.map(t => t.copy()(allocation = chooseFromOffers(t, offers)))
     }
@@ -157,13 +175,13 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     }
   }
 
-  def chooseFromOffers(req: TaskRequest, offers: Map[ID,Service]): Map[Service,ID] = {
+  def chooseFromOffers(req: TaskRequest, offers: Map[ID,(Service,Int)]): Map[Service,ID] = {
     var servicesToAlloc = req.missingServices
     var newAllocations = Map[Service,ID]()
     for(offer <- offers.toList.sortBy(_._1)){
-      if(servicesToAlloc.contains(offer._2)){
-        newAllocations += offer.swap
-        servicesToAlloc -= offer._2
+      if(servicesToAlloc.contains(offer._2._1)){
+        newAllocations += offer._2._1 -> offer._1
+        servicesToAlloc -= offer._2._1
       }
     }
 
@@ -222,10 +240,8 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
 
       node.put("numOfferedServices", offeredServices.size)
 
-      // Collect offers to the requestor
-      val offers = C[Double, Map[ID, Service]](gHops, _ ++ _, servicesToOffer.map(s => mid -> s).toMap, Map.empty)
-      // Collect hops (distance) from providers to the requestor
-      hops = C[Double,Map[ID,Int]](gHops, _++_, servicesToOffer.map(s => mid -> gHops).toMap, Map.empty)
+      // Collect offers and hops to the requestor
+      val offers = C[Double, Map[ID, (Service,Int)]](gHops, _ ++ _, servicesToOffer.map(s => mid -> (s,gHops)).toMap, Map.empty)
       // Collect the bubble diameter to the requestor
       val maxExt = C[Double,Int](gHops, Math.max, gHops, -1)
       // Update allocation based on service offers
@@ -251,7 +267,7 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
     val accomplished = keepFor > node.get[Number]("taskPropagationTime").longValue
     val giveUp = tryFor > node.get[Number]("taskConclusionTime").longValue
     val done = accomplished || giveUp
-    if(done && node.has("task") && node.get("task")==s.taskRequest.task){
+    if(done && node.has("task") && node.get[Task]("task")==s.taskRequest.task){
       node.remove("task")
       val latency: Int = (timestamp()-node.get[Long]("taskTime")).toInt
       node.put("taskLatency", if(node.has("taskLatency")) node.get[Int]("taskLatency")+latency else latency)

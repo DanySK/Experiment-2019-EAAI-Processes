@@ -41,6 +41,15 @@ class ServiceDiscovery extends AggregateProgram with StandardSensors with Gradie
   }
 
   def providedService(ns: Service): ProvidedService = {
+    if(providedServices.find(_.service == ns) == None) {
+      println("-------------")
+      println("Requested: " + ns)
+      println("Provided: " + providedServices)
+      println("Offered: " + offeredServices)
+      println("Error: quitting")
+      Thread.dumpStack()
+      System.exit(666)
+    }
     providedServices.find(_.service == ns).get
   }
 

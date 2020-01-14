@@ -143,6 +143,8 @@ fun makeTest(
     }
 }
 
+makeTest(name="basicSim", file = "service_discovery", sampling = 10.0, time = 250.0, vars = setOf("algorithm"), taskSize = 512)
+
 makeTest(name="sim", file = "service_discovery", sampling = 10.0, time = 3600.0, vars = setOf("seed", "cloudcost", "taskFrequency", "algorithm"), taskSize = 256)
 
 makeTest(name="graphicalSim", file = "service_discovery", sampling = 10.0, time = 3600.0, vars = setOf(), taskSize = 2024,

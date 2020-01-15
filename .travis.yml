@@ -25,6 +25,11 @@ script:
   - source venv/bin/activate
   - python process.py
   - deactivate
+before_deploy:
+  - tar --zstd -czvf "by-time.tar.gz" $TRAVIS_BUILD_DIR/charts/by-time
+  - git config --local user.name "Danilo Pianini"
+  - git config --local user.email "danilo.pianini@unibo.it"
+  - if [[ $(git describe) == *"-"* ]]; then git tag $(git describe) || :; fi
 before_cache:
   - curl "${GRAVIS}.clean_gradle_cache.sh" --output .clean_gradle_cache.sh
   - bash .clean_gradle_cache.sh
@@ -34,6 +39,17 @@ cache:
     - $HOME/.gradle/wrapper/
     - $PYENV_ROOT
     - $TRAVIS_BUILD_DIR/venv
+deploy:
+  - provider: releases
+    api_key:
+      secure: "ElMJOMb4N+exACzxKfAd6urApH6i1J8fPttBHl0qW/9/P8ywa52C2mltk4ShHe1lTYHSezNmz7FapeTldc93n4YvXOZ0zrOxX6bs1PU4Wp4K7wT4aAqG/wEaSUU/guC625hqqCrhwHQMBhAj/wYai9eNxTV300m+4dA4PyJj7lNXTBsUFIrAzH6VyYF2ZVnwIJg2W8MJyNQ/ohw5qciFpmMb9/Luu3yw5mg2n9YzKgH8OuVBp6jljvUYHGhjUq0dxOB0AX7DISgQgOQHYO3X6ijlXGrASlggqMcKY8pI0uBC7b1omdL0RUkrHIuzLzFYPhKteVkDh4/28+JAoTVB4FB76V0lkgNBF04e8baU7wzVlSZdXDnnHE9eFZG8QQag/0iZGhDHhdD0g6BT3Mqklu2PQNeKr/OIWhoAlprCmrs4sfyDXeOmK2aJZ/9EBjVUjJ1LqwIjmSNX+sFejdyBbYqO2mcl7cE9y2m5M75evryyMSn6HjdSPCcQwhNP9PGME82mb4E7uko6W6fNsAne7uIliXMC42B7Dp1BLVeRf5e/6SozOZgyJNpKaVWefrMTr9mxxx1Qj3OQC18byMPc0hP36beXr7QoXNlAPoA+LPPyyklhmD9NMT5vbrnejMVadXqb5csNg/6NQXkREnu63Hqr/AHBMdKk1CeCYBkPTys="
+    file_glob: true
+    file:
+      - "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
+      - "${TRAVIS_BUILD_DIR}/charts/*.pdf"
+    skip_cleanup: true
+    on:
+      repo: DanySK/Experiment-2019-EAAI-Processes
 notifications:
   email:
     recipients:

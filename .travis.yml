@@ -11,15 +11,19 @@ env:
     - GRAVIS="https://raw.githubusercontent.com/DanySK/Gravis-CI/master/"
   matrix:
     - JDK="adopt@1.11"
+before_install:
+  - alias python=python3
+  - python -m venv venv
 install:
   - curl "${GRAVIS}.install-jdk-travis.sh" --output .install-jdk-travis.sh
   - source .install-jdk-travis.sh
-script:
-  - ./gradlew runAll
-  - python -m venv venv
   - source venv/bin/activate
   - pip install pip -–upgrade
   - pip install -r requirements.txt
+  - deactivate
+script:
+  - ./gradlew runAll
+  - source venv/bin/activate
   - python process.py
   - deactivate
 before_cache:

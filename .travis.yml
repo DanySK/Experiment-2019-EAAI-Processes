@@ -29,7 +29,10 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
-    - $TRAVIS_BUILD_DIR/dist
+    - $TRAVIS_BUILD_DIR/venv
+    - timeprocessed
+    - data_summary_mean
+    - data_summary_std
 notifications:
   email:
     recipients:

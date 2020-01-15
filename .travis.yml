@@ -10,6 +10,7 @@ env:
   matrix:
     - JDK="adopt@1.11" PYENV_VERSION="3.8.1"
 before_install:
+  - pyenv install --list
   - pyenv install
   - python -m venv venv
 install:

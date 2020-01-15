@@ -40,16 +40,23 @@ cache:
     - $PYENV_ROOT
     - $TRAVIS_BUILD_DIR/venv
 deploy:
-  - provider: releases
-    token:
-        secure: nTFWsVVLM/jGU2O+w9NMhEZklpbWiZijKHOykFKMqLHVcbWdwQf0+yct82ESgI9VDf6w4ZICw7OZxinVvtCy0sDbJd1FqvtZUr2McxOjGFSuFPkX/ZqWzwH+XD/SDyho7Q0Gp+8Wijz55npdkiFPnAepI/MgrxlLyw6rQ6Zk6abISSVCX5Gr8fMsdqDKANm1rQkm56pegg/YiP2ePQ5V3NQjAMMeqRfPLDWZcWkK0E7i/8WYet/jLMKIwutYLyS/J21Mhk1a4d/dQGDN1tCFACQg9sG8O3my1oyyAXwkZKD7vhcCGH4UWne+13QnjAwXg9l9DpItxw7GabCu1Rt6o1xtzDoAhUisn2EiKguZYzIRTstMfSXb+aUVhwwpsF9LhtZoWPc0Fcg7lvDzijzh2KTw2mif/Yx+4hWcpZKWs7IYG4GDJ/fQzgt7yKjeyIMoR98UYg/QMCKRTC9dhKDnPguuofaZWI1Xw7NcZuIOmEZgKIKA9+dlVUaIjQsTrlPm8VEVZabFC84c3Un3qnfp/eXZIOdNmAg1kWYOxjesp5F76vTpoW2VC3lEpEfnlSZcoJi2pJoJh1imm5Kz0wYBCZlK56T6QipX3G3+1kIBABR0cIS85Kh6PJ61ypsB313VZPdO0c6ik5uKEflRgWBVMNC8dN9LvNNoNxpU4GP2eBc=
-    file:
-      - "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
-      - "${TRAVIS_BUILD_DIR}/charts/*.pdf"
-    edge: true
-    on:
-      repo: DanySK/Experiment-2019-EAAI-Processes
-      tags: false
+  provider: releases
+  api_key:
+    secure: NlsJDjIu6rDKhLmpUMlx8cGEf6HLXTX8db5WHD+X7/v38hejVesaVPrftcVpQN9N9Wk1f90fcD+cz3yNBCM3JBelsVnuIKPYQRCUsT8n9FF/S7stSoXwVdDJeXkTjC7K9M/KH/YQjm2fWeH/KHTDNemyfWO+s9B37vVf8y2bSGkeo9a1Lq86Yr9Sq5poeIGk6iWhUdYDUBefX1kJ08k4fidNJPv8v+wH48I8+RtpmiyjQOg4pnqqGOViLj8STFFDGP3fLW+CWxwbEAzWXYBy/97Nc/zk5r7m8iduv/VSceyVl5LdDgp5vKe+Ucnzpg24xWqCV2IIlcX1F7TH57y2Rv/3jHZlWY5qMo1Ad6I3iwrAPXuc9dvbFd2w2AIHPPzr6we5WyTJFOI2TQWdJIhxW5I7ca8GcMjhunmV8rji2P2GPMIiqMieo/zcGNBfEpbTwJAWFzdGO769ircZjk7uTWDGU5+WDxPumJBXwhAhZtvm5AWy++oJbuAgf7/YOt+zPc7vUw2t4gQUmj0M9EEJGnOiVw5gFsgCHkd9QYP9XzwtxTxQ12RBRkE96b+/O9UAcyGT5svrf14Z3Y9AjBQ88XZX+fwbC99SJ2/tDuJUXZHDBsECnTSX7uzqEgqI44dXUBt5bcHvWq/flR1VaaDaaw65bxOvgca1eBwbvTZDvB8=
+  skip_cleanup: true
+  file_glob: true
+  file:
+    - "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
+    - "${TRAVIS_BUILD_DIR}/charts/*.pdf"
+  #on:
+    #repo: DanySK/Experiment-2019-EAAI-Processes  - provider: releases
+    #file:
+      #- "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
+      #- "${TRAVIS_BUILD_DIR}/charts/*.pdf"
+    #edge: true
+    #on:
+      #repo: DanySK/Experiment-2019-EAAI-Processes
+      #tags: false
 notifications:
   email:
     recipients:

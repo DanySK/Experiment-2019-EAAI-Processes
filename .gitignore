@@ -1,8 +1,12 @@
 # Ignore Gradle project-specific cache directory
 .gradle
-
 # Ignore Gradle build output directory
 build
 .idea/
 out/
 data/
+data_summary_mean
+charts/
+data_summary_*
+timeprocessed
+venv/

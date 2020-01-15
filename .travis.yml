@@ -26,7 +26,7 @@ script:
   - python process.py
   - deactivate
 before_deploy:
-  - tar -czvf "by-time.tar.gz" $TRAVIS_BUILD_DIR/charts/by-time
+  - tar -czvf "charts/by-time.tar.gz" $TRAVIS_BUILD_DIR/charts/*/by-time
   - git config --local user.name "Danilo Pianini"
   - git config --local user.email "danilo.pianini@unibo.it"
   - if [[ $(git describe) == *"-"* ]]; then git tag $(git describe) || :; fi
@@ -48,8 +48,9 @@ deploy:
   file:
     - "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
     - "${TRAVIS_BUILD_DIR}/charts/*.pdf"
-  #on:
-    #repo: DanySK/Experiment-2019-EAAI-Processes  - provider: releases
+  on:
+    repo: DanySK/Experiment-2019-EAAI-Processes
+  #- provider: releases
     #file:
       #- "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
       #- "${TRAVIS_BUILD_DIR}/charts/*.pdf"

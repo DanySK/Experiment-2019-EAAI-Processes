@@ -14,12 +14,12 @@ env:
 before_install:
   - python -m venv venv
 install:
-  - curl "${GRAVIS}.install-jdk-travis.sh" --output .install-jdk-travis.sh
-  - source .install-jdk-travis.sh
   - source venv/bin/activate
   - pip install pip -–upgrade
   - pip install -r requirements.txt
   - deactivate
+  - curl "${GRAVIS}.install-jdk-travis.sh" --output .install-jdk-travis.sh
+  - source .install-jdk-travis.sh
 script:
   - ./gradlew runAll
   - source venv/bin/activate

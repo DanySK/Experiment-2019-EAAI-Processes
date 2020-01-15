@@ -250,7 +250,7 @@ if __name__ == '__main__':
     import matplotlib.cm as cmx
     matplotlib.rcParams.update({'axes.titlesize': 12})
     matplotlib.rcParams.update({'axes.labelsize': 10})
-    def make_chart(xdata, ydata, title = None, ylabel = None, xlabel = None, colors = None, linewidth = 1, errlinewidth = 0.5, figure_size = (6, 4)):
+    def make_line_chart(xdata, ydata, title = None, ylabel = None, xlabel = None, colors = None, linewidth = 1, errlinewidth = 0.5, figure_size = (6, 4)):
         fig = plt.figure(figsize = figure_size)
         ax = fig.add_subplot(1, 1, 1)
         ax.set_title(title)
@@ -273,11 +273,10 @@ if __name__ == '__main__':
         for current_coordinate in mergeable_variables:
             merge_variables = mergeable_variables - { current_coordinate }
             merge_data_view = current_experiment_means.mean(dim = merge_variables, skipna = True)
-            print(merge_data_view)
             for current_coordinate_value in merge_data_view[current_coordinate].values:
                 for current_metric in merge_data_view.data_vars:
                     title = current_metric + " with " + current_coordinate + "=" + str(current_coordinate_value)
-                    fig, ax = make_chart(
+                    fig, ax = make_line_chart(
                         title = title,
                         xdata = merge_data_view[timeColumnName],
                         xlabel = timeColumnName,
@@ -289,8 +288,9 @@ if __name__ == '__main__':
                     )
                     ax.legend()
                     fig.tight_layout()
-                    Path(output_directory).mkdir(parents=True, exist_ok=True)
-                    fig.savefig(output_directory + "/" + current_metric + "_" + current_coordinate + "_" + str(current_coordinate_value) + ".pdf")
+                    by_time_output_directory = output_directory + "/by-time"
+                    Path(by_time_output_directory).mkdir(parents=True, exist_ok=True)
+                    fig.savefig(by_time_output_directory + "/" + current_metric + "_" + current_coordinate + "_" + str(current_coordinate_value) + ".pdf")
                     plt.close(fig)
 #    # Prepare the charting system
 ##    colormap = cmx.viridis

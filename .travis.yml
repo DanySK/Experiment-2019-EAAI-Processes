@@ -11,11 +11,6 @@ env:
     - GRAVIS="https://raw.githubusercontent.com/DanySK/Gravis-CI/master/"
   matrix:
     - JDK="adopt@1.11"
-    - JDK="adopt-openj9@1.11"
-    - JDK="adopt@1.12"
-    - JDK="adopt-openj9@1.12"
-    - JDK="adopt@1.13"
-    - JDK="adopt-openj9@1.13"
 install:
   - curl "${GRAVIS}.install-jdk-travis.sh" --output .install-jdk-travis.sh
   - source .install-jdk-travis.sh

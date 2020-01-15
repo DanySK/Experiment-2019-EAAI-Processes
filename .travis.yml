@@ -5,7 +5,6 @@ git:
   depth: false
 os:
   - linux
-dist: bionic
 env:
   global:
     - TERM=dumb

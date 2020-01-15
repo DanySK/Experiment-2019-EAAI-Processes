@@ -8,7 +8,7 @@ env:
     - TERM=dumb
     - GRAVIS="https://raw.githubusercontent.com/DanySK/Gravis-CI/master/"
   matrix:
-    - JDK="adopt@1.11" PYENV_VERSION="3.8.1"
+    - JDK="adopt@1.11" PYENV_VERSION="3.6.3"
 before_install:
   - pyenv install --list
   - pyenv install

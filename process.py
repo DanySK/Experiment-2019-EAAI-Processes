@@ -8,6 +8,20 @@ def distance(val, ref):
     return abs(ref - val)
 vectDistance = np.vectorize(distance)
 
+def cmap_xmap(function, cmap):
+    """ Applies function, on the indices of colormap cmap. Beware, function
+    should map the [0, 1] segment to itself, or you are in for surprises.
+
+    See also cmap_xmap.
+    """
+    cdict = cmap._segmentdata
+    function_to_map = lambda x : (function(x[0]), x[1], x[2])
+    for key in ('red','green','blue'):
+        cdict[key] = map(function_to_map, cdict[key])
+#        cdict[key].sort()
+#        assert (cdict[key][0]<0 or cdict[key][-1]>1), "Resulting indices extend out of the [0, 1] segment."
+    return matplotlib.colors.LinearSegmentedColormap('colormap',cdict,1024)
+
 def getClosest(sortedMatrix, column, val):
     while len(sortedMatrix) > 3:
         half = int(len(sortedMatrix) / 2)
@@ -288,12 +302,61 @@ if __name__ == '__main__':
                     )
                     ax.legend()
                     fig.tight_layout()
-                    by_time_output_directory = output_directory + "/by-time"
+                    by_time_output_directory = output_directory + "/" + experiment + "/by-time"
                     Path(by_time_output_directory).mkdir(parents=True, exist_ok=True)
                     fig.savefig(by_time_output_directory + "/" + current_metric + "_" + current_coordinate + "_" + str(current_coordinate_value) + ".pdf")
                     plt.close(fig)
-#    # Prepare the charting system
-##    colormap = cmx.viridis
+    # Prepare the charting system
+    import seaborn as sns
+    from matplotlib.colors import LogNorm
+    def make_heatmap_chart(matrix, vmin = None, vmax = None, ticks = None, show_values = False, norm = None, title = None, ylabel = None, xlabel = None, colors = None, figure_size = (6, 4)):
+        fig = plt.figure(figsize = figure_size)
+        ax = fig.add_subplot(1, 1, 1)
+        ax.set_title(title)
+        sns.heatmap(
+            matrix,
+            vmin = vmin,
+            vmax = vmax,
+            annot = show_values,
+            ax = ax,
+            norm = norm,
+            cmap = colors,
+            cbar_kws = { "ticks": ticks } if ticks else None
+        )
+        ax.invert_yaxis()
+        if xlabel:
+            ax.set_xlabel(xlabel)
+        if ylabel:
+            ax.set_ylabel(ylabel)
+        return (fig, ax)
+    for experiment in experiments:
+        metric = 'taskHops[Mean]'
+        current_experiment_data = means[experiment].mean(dim = timeColumnName)[metric]
+        labelmap = { True: "process-based", False: "gradient-based" }
+        for value in current_experiment_data.coords[comparison_variable].values:
+            heatmap_data = current_experiment_data.sel({comparison_variable: value})
+            axes_names = list({ name for name in heatmap_data.coords } - { comparison_variable })
+            values_x = heatmap_data.coords[axes_names[0]]
+            values_y = heatmap_data.coords[axes_names[1]]
+            extent = (min(values_x), max(values_x), min(values_y), max(values_y))
+            log_norm = LogNorm(vmin=1, vmax=heatmap_data.max())
+            ticks = [1, 10, 20, 40]
+#            basecolormap = cmx.seismic
+            fig, ax = make_heatmap_chart(
+                heatmap_data.clip(1, 100).to_pandas(),
+                title = "Route length with " + labelmap[value] + " discovery",
+                norm = log_norm,
+                ylabel = "Mean route length to cloud provider (hops)",
+                xlabel = "Per-client task creation rate (Hz)",
+                colors = cmx.viridis_r,
+                vmin = 1,
+                vmax = 100,
+                show_values = False,
+                ticks = [1, 10, 20, 100, current_experiment_data.max()]
+            )
+            fig.tight_layout()
+            fig.savefig(output_directory + "/" + labelmap[value] + ".pdf")
+            plt.close(fig)
 #
 #    # Prepare selected charts
 #    # Evaluation of the backoff parameter

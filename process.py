@@ -291,7 +291,7 @@ if __name__ == '__main__':
                     fig.tight_layout()
                     Path(output_directory).mkdir(parents=True, exist_ok=True)
                     fig.savefig(output_directory + "/" + current_metric + "_" + current_coordinate + "_" + str(current_coordinate_value) + ".pdf")
-
+                    plt.close(fig)
 #    # Prepare the charting system
 ##    colormap = cmx.viridis
 #

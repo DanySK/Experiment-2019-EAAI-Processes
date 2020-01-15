@@ -6,7 +6,6 @@ git:
 os:
   - linux
   - osx
-  - windows
 dist: bionic
 env:
   global:

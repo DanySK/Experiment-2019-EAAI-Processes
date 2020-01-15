@@ -12,7 +12,6 @@ env:
   matrix:
     - JDK="adopt@1.11"
 before_install:
-  - alias python=python3
   - python -m venv venv
 install:
   - curl "${GRAVIS}.install-jdk-travis.sh" --output .install-jdk-travis.sh

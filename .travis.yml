@@ -1,6 +1,4 @@
-language: python
-python:
-  - "3.8"
+language: bash
 git:
   depth: false
 os:
@@ -10,8 +8,9 @@ env:
     - TERM=dumb
     - GRAVIS="https://raw.githubusercontent.com/DanySK/Gravis-CI/master/"
   matrix:
-    - JDK="adopt@1.11"
+    - JDK="adopt@1.11" PYENV_VERSION="3.8.1"
 before_install:
+  - pyenv install
   - python -m venv venv
 install:
   - source venv/bin/activate

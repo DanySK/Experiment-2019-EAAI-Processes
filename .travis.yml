@@ -10,9 +10,7 @@ env:
   matrix:
     - JDK="adopt@1.11" PYTHON_VERSION="3.6.3"
 before_install:
-  - pyenv local $PYTHON_VERSION
-  - pyenv install --list
-  - pyenv install
+  - pyenv install $PYTHON_VERSION
   - python -m venv venv
 install:
   - source venv/bin/activate
@@ -23,6 +21,7 @@ install:
   - source .install-jdk-travis.sh
 script:
   - ./gradlew runAll
+  - pyenv local $PYTHON_VERSION
   - source venv/bin/activate
   - python process.py
   - deactivate

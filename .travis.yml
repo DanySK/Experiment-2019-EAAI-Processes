@@ -14,7 +14,14 @@ env:
 install:
   - curl "${GRAVIS}.install-jdk-travis.sh" --output .install-jdk-travis.sh
   - source .install-jdk-travis.sh
-script: ./gradlew runAll
+script:
+  - ./gradlew runAll
+  - python -m venv venv
+  - source venv/bin/activate
+  - pip install pip -–upgrade
+  - pip install -r requirements.txt
+  - python process.py
+  - deactivate
 before_cache:
   - curl "${GRAVIS}.clean_gradle_cache.sh" --output .clean_gradle_cache.sh
   - bash .clean_gradle_cache.sh
@@ -22,6 +29,7 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
+    - $TRAVIS_BUILD_DIR/dist
 notifications:
   email:
     recipients:

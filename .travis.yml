@@ -4,6 +4,7 @@ git:
   depth: false
 os:
   - linux
+  - osx
 env:
   global:
     - TERM=dumb
@@ -50,6 +51,7 @@ deploy:
     on:
       repo: DanySK/Experiment-2019-EAAI-Processes
       tags: true
+      condition: os = linux
   - provider: releases
     edge: true
     file:
@@ -58,6 +60,7 @@ deploy:
     on:
       repo: DanySK/Experiment-2019-EAAI-Processes
       tags: false
+      condition: os = linux
 notifications:
   email:
     #if: branch = master

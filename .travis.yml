@@ -38,6 +38,7 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
     - $PYENV_ROOT
+    - "$(pyenv root)"
     - $TRAVIS_BUILD_DIR/venv
 deploy:
   provider: releases

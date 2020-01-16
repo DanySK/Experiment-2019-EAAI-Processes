@@ -67,4 +67,4 @@ notifications:
       - giorgio.audrito@unito.it
       - ferruccio.damiani@unito.it
     on_success: never
-    on_failure: never
+    on_failure: change

@@ -59,6 +59,7 @@ deploy:
       tags: false
 notifications:
   email:
+    if: branch = master
     recipients:
       - danilo.pianini@unibo.it
       - roby.casadei@unibo.it

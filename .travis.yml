@@ -41,21 +41,22 @@ cache:
     - "$(pyenv root)"
     - $TRAVIS_BUILD_DIR/venv
 deploy:
-  provider: releases
-  edge: true
-  file:
-    - "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
-    - "${TRAVIS_BUILD_DIR}/charts/*.pdf"
-  on:
-    repo: DanySK/Experiment-2019-EAAI-Processes
-  #- provider: releases
-    #file:
-      #- "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
-      #- "${TRAVIS_BUILD_DIR}/charts/*.pdf"
-    #edge: true
-    #on:
-      #repo: DanySK/Experiment-2019-EAAI-Processes
-      #tags: false
+  - provider: releases
+    edge: true
+    file:
+      - "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
+      - "${TRAVIS_BUILD_DIR}/charts/*.pdf"
+    on:
+      repo: DanySK/Experiment-2019-EAAI-Processes
+      tags: true
+  - provider: releases
+    edge: true
+    file:
+      - "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
+      - "${TRAVIS_BUILD_DIR}/charts/*.pdf"
+    on:
+      repo: DanySK/Experiment-2019-EAAI-Processes
+      tags: false
 notifications:
   email:
     recipients:

@@ -347,7 +347,7 @@ if __name__ == '__main__':
                 title = "Route length with " + labelmap[value] + " discovery",
                 norm = log_norm,
                 ylabel = "Mean route length to cloud provider (hops)",
-                xlabel = "Per-client task creation rate (Hz)",
+                xlabel = "Per-client request creation rate (Hz)",
                 colors = cmx.viridis_r,
                 vmin = 1,
                 vmax = 100,

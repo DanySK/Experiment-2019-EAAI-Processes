@@ -1,11 +1,9 @@
-# Alchemist Primer
+# Engineering Collective Intelligence at the Edge with Aggregate Processes
 
-## Basic Setup for the Alchemist Simulator
+## Experimental results of the third case study
 
-This is a template project to spawn projects using the Alchemist Simulator.
-It provides a pre-configured gradle build.
-Simulations can be included in the `src/main/yaml` folder,
-and executed via the `runAll` Gradle task.
+This repository contains code and instruction to reproduce the experiments presented in the paper "Engineering Collective Intelligence at the Edge with Aggregate Processes" by Roberto Casadei, Danilo Pianini, Mirko Viroli, Giorgio Audrito, and Ferruccio Damiani; submitted to Elsevier's [Engineering Applications of Artificial Intelligence](https://www.journals.elsevier.com/engineering-applications-of-artificial-intelligence) journal.
 
-For each YAML file in `src/main/yaml` a task `runFileName` will be created.
+## Requirements
+
 

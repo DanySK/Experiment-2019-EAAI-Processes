@@ -23,6 +23,11 @@ We provide a reference Travis CI configuration to maintain reproducibility over 
 While this image: [![Build Status](https://travis-ci.org/DanySK/Experiment-2019-EAAI-Processes.svg?branch=master)](https://travis-ci.org/DanySK/Experiment-2019-EAAI-Processes)
 is green, it means that the experiment is being maintained and that, by copying the Travis CI configuration found in the `.travis.yml` file, you should be able to re-run the tests entirely.
 
+### Automatic releases
+
+Charts are remotely generated and made available on the project release page.
+[The latest release](https://github.com/DanySK/Experiment-2019-EAAI-Processes/releases/latest) allows for quick retrieval of the latest version of the charts.
+
 ## Running the simulations
 
 A graphical execution of the simulation can be started by issuing the following command
@@ -37,7 +42,43 @@ If you are under Linux, the system tries to detect the available memory and CPUs
 In order to speed up the process for those interested in observing and manipulating the existing data, we provide simulation-generated data directly in the repository.
 Generating the charts is matter of executing the `process.py` script.
 The enviroment is designed to be used in conjunction with pyenv.
-The following guide will start from the assumption that pyenv is installed on your system.
 
-First, install Python by issuing ``pyenv install --skip-existing 3.6.3``
+### Python environment configuration
+
+The following guide will start from the assumption that pyenv is installed on your system.
+First, install Python by issuing
+
+``pyenv install --skip-existing 3.6.3``
+
+Now, configure the project to be interpreted with exactly that version:
+
+``pyenv local 3.6.3``
+
+In order not to dirt your working environment, we recommend using a virtual environment:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+Your shell should be now configured to run in a virtual environment.
+Update the `pip` package manager and install the required dependencies.
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+If the process completes successfully, your local environment is ready for executing the data crunching script.
+You can exit the virtual environment mode by issuing ``deactivate``
+
+### Data processing and chart creation
+
+This section assumes you correctly completed the required configuration described in the previous section.
+In order for the script to execute, you only need to:
+
+1. Enter the virtual environment with `source venv/bin/activate`
+2. Launche the actuall process by issuing `python process.py`
+
+If you do not need to use the script any longer and want to get back to your normal shell, issue `deactivate`
 

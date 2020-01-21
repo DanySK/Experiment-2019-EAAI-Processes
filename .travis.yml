@@ -1,3 +1,4 @@
+if: tag is blank
 language: bash
 git:
   depth: false
@@ -10,7 +11,7 @@ env:
   matrix:
     - JDK="adopt@1.11" PYTHON_VERSION="3.6.3"
 before_install:
-  - pyenv install $PYTHON_VERSION
+  - pyenv install --skip-existing $PYTHON_VERSION
   - pyenv local $PYTHON_VERSION
   - python -m venv venv
 install:
@@ -38,33 +39,35 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
     - $PYENV_ROOT
+    - "$(pyenv root)"
     - $TRAVIS_BUILD_DIR/venv
 deploy:
-  provider: releases
-  api_key:
-    secure: NlsJDjIu6rDKhLmpUMlx8cGEf6HLXTX8db5WHD+X7/v38hejVesaVPrftcVpQN9N9Wk1f90fcD+cz3yNBCM3JBelsVnuIKPYQRCUsT8n9FF/S7stSoXwVdDJeXkTjC7K9M/KH/YQjm2fWeH/KHTDNemyfWO+s9B37vVf8y2bSGkeo9a1Lq86Yr9Sq5poeIGk6iWhUdYDUBefX1kJ08k4fidNJPv8v+wH48I8+RtpmiyjQOg4pnqqGOViLj8STFFDGP3fLW+CWxwbEAzWXYBy/97Nc/zk5r7m8iduv/VSceyVl5LdDgp5vKe+Ucnzpg24xWqCV2IIlcX1F7TH57y2Rv/3jHZlWY5qMo1Ad6I3iwrAPXuc9dvbFd2w2AIHPPzr6we5WyTJFOI2TQWdJIhxW5I7ca8GcMjhunmV8rji2P2GPMIiqMieo/zcGNBfEpbTwJAWFzdGO769ircZjk7uTWDGU5+WDxPumJBXwhAhZtvm5AWy++oJbuAgf7/YOt+zPc7vUw2t4gQUmj0M9EEJGnOiVw5gFsgCHkd9QYP9XzwtxTxQ12RBRkE96b+/O9UAcyGT5svrf14Z3Y9AjBQ88XZX+fwbC99SJ2/tDuJUXZHDBsECnTSX7uzqEgqI44dXUBt5bcHvWq/flR1VaaDaaw65bxOvgca1eBwbvTZDvB8=
-  skip_cleanup: true
-  file_glob: true
-  file:
-    - "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
-    - "${TRAVIS_BUILD_DIR}/charts/*.pdf"
-  on:
-    repo: DanySK/Experiment-2019-EAAI-Processes
-  #- provider: releases
-    #file:
-      #- "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
-      #- "${TRAVIS_BUILD_DIR}/charts/*.pdf"
-    #edge: true
-    #on:
-      #repo: DanySK/Experiment-2019-EAAI-Processes
-      #tags: false
+  - provider: releases
+    edge: true
+    file:
+      - "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
+      - "${TRAVIS_BUILD_DIR}/charts/*.pdf"
+    on:
+      repo: DanySK/Experiment-2019-EAAI-Processes
+      tags: true
+#      condition: os = linux
+  - provider: releases
+    edge: true
+    file:
+      - "${TRAVIS_BUILD_DIR}/charts/*.tar.gz"
+      - "${TRAVIS_BUILD_DIR}/charts/*.pdf"
+    on:
+      repo: DanySK/Experiment-2019-EAAI-Processes
+      tags: false
+#      condition: os = linux
 notifications:
   email:
-    recipients:
-      - danilo.pianini@unibo.it
-      - roby.casadei@unibo.it
-      - mirko.viroli@unibo.it
-      - giorgio.audrito@unito.it
-      - ferruccio.damiani@unito.it
+    #if: branch = master
+    #recipients:
+      #- danilo.pianini@unibo.it
+      #- roby.casadei@unibo.it
+      #- mirko.viroli@unibo.it
+      #- giorgio.audrito@unito.it
+      #- ferruccio.damiani@unito.it
     on_success: never
-    on_failure: never
+    on_failure: change

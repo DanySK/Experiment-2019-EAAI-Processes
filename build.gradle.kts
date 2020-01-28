@@ -16,7 +16,10 @@ plugins {
 
 repositories {
     mavenCentral()
-    /* 
+    listOf("", "-eu", "-asia").forEach {
+        maven(url = "https://maven-central$it.storage-download.googleapis.com/repos/central/data/")
+    }
+    /*
      * The following repositories contain beta features and should be added for experimental mode only
      * 
      * maven("https://dl.bintray.com/alchemist-simulator/Alchemist/")
@@ -40,8 +43,8 @@ dependencies {
     implementation("it.unibo.alchemist:alchemist-incarnation-scafi:9.2.1")
     implementation("org.scala-lang:scala-library:2.12.2")
     implementation("it.unibo.apice.scafiteam:scafi-core_2.12:0.3.2")
-    implementation("com.uchuhimo:konf-core:+")
-    implementation("com.uchuhimo:konf-yaml:+")
+    implementation("com.uchuhimo:konf-core:0.22.1")
+    implementation("com.uchuhimo:konf-yaml:0.22.1")
 
 }
 tasks.withType<KotlinCompile> {

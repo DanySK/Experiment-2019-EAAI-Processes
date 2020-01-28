@@ -16,7 +16,10 @@ plugins {
 
 repositories {
     mavenCentral()
-    /* 
+    listOf("", "-eu", "-asia").forEach {
+        maven(url = "https://maven-central$it.storage-download.googleapis.com/repos/central/data/")
+    }
+    /*
      * The following repositories contain beta features and should be added for experimental mode only
      * 
      * maven("https://dl.bintray.com/alchemist-simulator/Alchemist/")

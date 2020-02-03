@@ -24,7 +24,7 @@ install:
 script:
   - ./gradlew runAll
   - source venv/bin/activate
-  - python process.py
+  - travis_wait 50 python process.py
   - deactivate
 before_deploy:
   - tar -czvf "charts/by-time.tar.gz" $TRAVIS_BUILD_DIR/charts/*/by-time

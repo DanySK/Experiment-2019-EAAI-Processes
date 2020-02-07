@@ -16,15 +16,11 @@ before_install:
   - source $GRAVIS/install-jdk
   - source $GRAVIS/install-python
 install:
-  - source venv/bin/activate
   - pip install --upgrade pip
   - pip install -r requirements.txt
-  - deactivate
 script:
   - ./gradlew runAll
-  - source venv/bin/activate
   - travis_wait 50 python process.py
-  - deactivate
 before_deploy:
   - tar -czvf "charts/by-time.tar.gz" $TRAVIS_BUILD_DIR/charts/*/by-time
   - git config --local user.name "Danilo Pianini"

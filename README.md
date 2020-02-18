@@ -78,7 +78,7 @@ This section assumes you correctly completed the required configuration describe
 In order for the script to execute, you only need to:
 
 1. Enter the virtual environment with `source venv/bin/activate`
-2. Launche the actuall process by issuing `python process.py`
+2. Launch the actual process by issuing `python process.py`
 
 If you do not need to use the script any longer and want to get back to your normal shell, issue `deactivate`
 

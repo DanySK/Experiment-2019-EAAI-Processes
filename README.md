@@ -82,3 +82,18 @@ In order for the script to execute, you only need to:
 
 If you do not need to use the script any longer and want to get back to your normal shell, issue `deactivate`
 
+## Implementation details
+
+The simulation project is organised as follows:
+
+- `src/main/yaml/service_discovery.yml` is the **simulation descriptor**: it specifies simulation variables, molecules to be exported, the network model (distance-based connectivity) and structure (circular arcs modelling a hierarchical network), and the programs to be executed
+- `src/main/resources/service_discovery.aes`: file of the effects for the graphical simulation
+- `src/main/scala/it/unibo/casestudy/`: directory with the Scala/ScaFi source code, organised as follows
+    - `ServiceDomainModel.scala`: implements the domain model of the case study in terms of interfaces and data classes (for entities like *services* and *tasks*)
+    - `TaskGenerator.scala`: program executed with `taskFrequency` (`ExponentialTime` distribution) in order to simulate the arrival of new tasks to be executed
+    - `ServiceDiscovery.scala`: the core aggregate program of the case study, augmented with simulation-specific code
+        - notice that the `ServiceDiscovery` class extends `AggregateProgram` and mixes aggregate libraries in
+        - the entry point is the `main` method of the `ServiceDiscovery` class
+        - the baseline algorithm is given by method `classicServiceDiscovery`
+        - the aggregate process-based algorithm is given by method `processBasedServiceDiscovery`,
+        which is quite simple as much of the logic is in the process definition method `serviceDiscoveryProcess`
